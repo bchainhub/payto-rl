@@ -1,0 +1,55 @@
+{
+  "name": "payto-rl",
+  "version": "1.0.0",
+  "description": "Payto resource locator",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "npm run build && node --loader ts-node/esm ./node_modules/uvu/bin.js test",
+    "build": "tsc",
+    "dev": "node --loader ts-node/esm --inspect src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bchainhub/payto-rl"
+  },
+  "files": [
+    "src/",
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "payto",
+    "protocol",
+    "prl",
+    "uniform",
+    "resource",
+    "locator",
+    "ican",
+    "iban",
+    "upi",
+    "ach",
+    "pix",
+    "cash"
+  ],
+  "author": "@rastislavcore",
+  "license": "CORE",
+  "bugs": {
+    "url": "https://github.com/bchainhub/payto-rl/issues"
+  },
+  "homepage": "https://github.com/bchainhub/payto-rl#readme",
+  "engines": {
+    "node": ">=16"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "devDependencies": {
+    "esm": "^3.2.25",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3",
+    "uvu": "^0.5.6"
+  }
+}
