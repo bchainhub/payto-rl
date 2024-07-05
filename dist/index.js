@@ -38,6 +38,12 @@ class Payto {
             this.searchParams.delete('amount');
         }
     }
+    get asset() {
+        return this.currency[0];
+    }
+    set asset(value) {
+        this.currency = [value];
+    }
     get bic() {
         return this.getHostnameParts(this.pathname.split('/'), 'bic', 2);
     }
@@ -60,14 +66,26 @@ class Payto {
         return result;
     }
     set currency(value) {
-        const [amount, token, fiat] = value;
+        const [token, fiat, amount] = value;
+        const amountValue = this.searchParams.get('amount');
+        let oldToken, oldValue;
+        if (amountValue) {
+            const amountArray = amountValue.split(':');
+            if (amountArray[1]) {
+                oldToken = amountArray[0];
+                oldValue = amountArray[1];
+            }
+            else {
+                oldValue = amountArray[0];
+            }
+        }
         if (fiat)
             this.fiat = fiat.toLowerCase();
         if (token) {
-            this.amount = `${token}:${amount ?? ''}`;
+            this.amount = `${token}:${amount || (oldValue || '')}`;
         }
         else if (amount) {
-            this.amount = `${amount}`;
+            this.amount = `${oldToken ? oldToken + ':' : ''}${amount}`;
         }
     }
     get deadline() {
@@ -258,6 +276,12 @@ class Payto {
             this.searchParams.delete('split');
         }
     }
+    get username() {
+        return this.url.username;
+    }
+    set username(value) {
+        this.url.username = value;
+    }
     get value() {
         const amount = this.searchParams.get('amount');
         if (amount) {
@@ -288,15 +312,6 @@ class Payto {
                 }
             }
         }
-        else {
-            this.searchParams.delete('amount');
-        }
-    }
-    get username() {
-        return this.url.username;
-    }
-    set username(value) {
-        this.url.username = value;
     }
     toString() {
         return this.url.toString();
@@ -309,7 +324,7 @@ class Payto {
         if (this.port)
             obj.port = this.port;
         if (this.currency[0])
-            obj.currency = this.currency[0];
+            obj.asset = this.currency[0];
         if (this.currency[1])
             obj.fiat = this.currency[1];
         if (this.amount)

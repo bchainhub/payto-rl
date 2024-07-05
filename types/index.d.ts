@@ -12,11 +12,14 @@ declare class Payto {
 	get amount(): string | null;
 	set amount(value: string | null);
 
+	get asset(): string | null;
+	set asset(value: string | null);
+
 	get bic(): string | null;
 	set bic(value: string | null);
 
 	get currency(): [string, string?, string?];
-	set currency(value: [number?, string?, string?]);
+	set currency(value: [string?, string?, number?]);
 
 	get deadline(): string | null;
 	set deadline(value: string | null);
