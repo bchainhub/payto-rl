@@ -45,6 +45,14 @@ class Payto {
 		}
 	}
 
+	get asset(): string | null {
+		return this.currency[0];
+	}
+
+	set asset(value: string | undefined) {
+		this.currency = [value];
+	}
+
 	get bic(): string | null {
 		return this.getHostnameParts(this.pathname.split('/'), 'bic', 2);
 	}
@@ -69,13 +77,24 @@ class Payto {
 		return result;
 	}
 
-	set currency(value: [number?, string?, string?]) {
-		const [amount, token, fiat] = value;
+	set currency(value: [string?, string?, number?]) {
+		const [token, fiat, amount] = value;
+		const amountValue = this.searchParams.get('amount');
+		let oldToken, oldValue;
+		if (amountValue) {
+			const amountArray = amountValue.split(':');
+			if (amountArray[1]) {
+				oldToken = amountArray[0];
+				oldValue = amountArray[1];
+			} else {
+				oldValue = amountArray[0];
+			}
+		}
 		if (fiat) this.fiat = fiat.toLowerCase();
 		if (token) {
-			this.amount = `${token}:${amount ?? ''}`;
+			this.amount = `${token}:${amount || (oldValue || '')}`;
 		} else if (amount) {
-			this.amount = `${amount}`;
+			this.amount = `${oldToken ? oldToken + ':' : ''}${amount}`;
 		}
 	}
 
@@ -302,6 +321,14 @@ class Payto {
 		}
 	}
 
+	get username(): string {
+		return this.url.username;
+	}
+
+	set username(value: string) {
+		this.url.username = value;
+	}
+
 	get value(): number | null {
 		const amount = this.searchParams.get('amount');
 		if (amount) {
@@ -330,17 +357,7 @@ class Payto {
 					this.searchParams.set('amount', value.toString());
 				}
 			}
-		} else {
-			this.searchParams.delete('amount');
 		}
-	}
-
-	get username(): string {
-		return this.url.username;
-	}
-
-	set username(value: string) {
-		this.url.username = value;
 	}
 
 	toString(): string {
@@ -354,7 +371,7 @@ class Payto {
 	toJSONObject(): object {
 		const obj: { [key: string]: any } = {};
 		if (this.port) obj.port = this.port;
-		if (this.currency[0]) obj.currency = this.currency[0];
+		if (this.currency[0]) obj.asset = this.currency[0];
 		if (this.currency[1]) obj.fiat = this.currency[1];
 		if (this.amount) obj.amount = this.amount;
 		if (this.address) obj.address = this.address;

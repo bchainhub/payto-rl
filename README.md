@@ -28,34 +28,44 @@ Here is an example of how to use the `Payto-RL` package:
 ```typescript
 import Payto from 'payto-rl';
 
-const paytoString = 'payto://btc/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.1&fiat=usd';
+const paytoString = 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur';
 const payto = new Payto(paytoString);
 
-console.log(payto.address); // Outputs: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
-console.log(payto.amount); // Outputs: 0.1
-console.log(payto.currency); // Outputs: ['btc', 'usd']
+console.log(payto.address); // Outputs: cb7147879011ea207df5b35a24ca6f0859dcfb145999
+console.log(payto.amount); // Outputs: ctn:10.01
+console.log(payto.value); // Outputs: 10.01
+console.log(payto.network); // Outputs: xcb
+console.log(payto.currency); // Outputs: ['ctn', 'eur']
 
-payto.amount = '0.2';
-console.log(payto.amount); // Outputs: 0.2
+payto.value = 20.02;
+console.log(payto.amount); // Outputs: ctn:20.02
+console.log(payto.value); // Outputs: 20.02
+console.log(payto.fiat); // Outputs: eur
+// Then it should be payed 20.02 EUR in CTN to the address cb7147879011ea207df5b35a24ca6f0859dcfb145999 on the XCB network.
 
 console.log(payto.toJSONObject());
 
 /*
 Outputs:
 {
-  address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-  amount: '0.2',
-  currency: 'btc',
-  fiat: 'usd',
-  host: 'btc',
-  hostname: 'btc',
-  href: 'payto://btc/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.2&fiat=usd',
-  network: 'btc',
-  pathname: '/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+  address: 'cb7147879011ea207df5b35a24ca6f0859dcfb145999',
+  amount: 'ctn:20.02',
+  asset: 'ctn',
+  fiat: 'eur',
+  host: 'xcb',
+  hostname: 'xcb',
+  href: 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur',
+  network: 'xcb',
+  pathname: '/cb7147879011ea207df5b35a24ca6f0859dcfb145999',
   protocol: 'payto:',
-  search: '?amount=0.2&fiat=usd'
+  search: '?amount=ctn:10.01&fiat=eur',
+  value: 20.02
 }
 */
+
+payto.currency = ['btc', 'usd', 12];
+console.log(payto.currency); // Outputs: ['btc', 'usd']
+console.log(payto.value); // Outputs: 12
 ```
 
 ## API
@@ -79,6 +89,10 @@ Gets or sets the address component of the PRL.
 ##### `amount: string | null`
 
 Gets or sets the amount component of the PRL. Amount consists of the number of units and the currency delimited by `:`.
+
+##### `asset: string | null`
+
+Gets or sets the asset component of the PRL. Asset is the currency in the amount field. Can be ticker or smart contract address.
 
 ##### `bic: string | null`
 

@@ -7,10 +7,12 @@ declare class Payto {
     set address(value: string | null);
     get amount(): string | null;
     set amount(value: string | null);
+    get asset(): string | null;
+    set asset(value: string | undefined);
     get bic(): string | null;
     set bic(value: string | null);
     get currency(): [string | null, string | null];
-    set currency(value: [number?, string?, string?]);
+    set currency(value: [string?, string?, number?]);
     get deadline(): string | null;
     set deadline(value: string | null);
     get donate(): string | null;
@@ -55,10 +57,10 @@ declare class Payto {
     get searchParams(): URLSearchParams;
     get split(): [string, string, boolean] | null;
     set split(value: [string, string, boolean] | null);
-    get value(): number | null;
-    set value(value: number | null);
     get username(): string;
     set username(value: string);
+    get value(): number | null;
+    set value(value: number | null);
     toString(): string;
     toJSON(): string;
     toJSONObject(): object;
