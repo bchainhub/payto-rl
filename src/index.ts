@@ -53,12 +53,48 @@ class Payto {
 		this.currency = [value];
 	}
 
+	get barcode(): string | null {
+		return this.searchParams.get('barcode');
+	}
+
+	set barcode(value: string | null) {
+		if (value && value.toLowerCase() in ['pdf417', 'aztec', '0']) {
+			this.searchParams.set('amount', value.toLowerCase());
+		} else {
+			this.searchParams.delete('amount');
+		}
+	}
+
 	get bic(): string | null {
 		return this.getHostnameParts(this.pathname.split('/'), 'bic', 2);
 	}
 
 	set bic(value: string | null) {
 		this.setHostnameParts(value, 2);
+	}
+
+	get colorBackground(): string | null {
+		return this.searchParams.get('color-b')?.toLowerCase() || null;
+	}
+
+	set colorBackground(value: string | null) {
+		if (value && /[0-9a-fA-F]{6}/.test(value)) {
+			this.searchParams.set('color-b', value.toLowerCase());
+		} else {
+			this.searchParams.delete('color-b');
+		}
+	}
+
+	get colorForeground(): string | null {
+		return this.searchParams.get('color-f')?.toLowerCase() || null;
+	}
+
+	set colorForeground(value: string | null) {
+		if (value && /[0-9a-fA-F]{6}/.test(value)) {
+			this.searchParams.set('color-f', value.toLowerCase());
+		} else {
+			this.searchParams.delete('color-f');
+		}
 	}
 
 	get currency(): [string | null, string | null] {
@@ -98,13 +134,20 @@ class Payto {
 		}
 	}
 
-	get deadline(): string | null {
-		return this.searchParams.get('dl');
+	get deadline(): number | null {
+		const dl = this.searchParams.get('dl');
+		if (dl !== null) {
+			const parsedDl = parseInt(dl, 10);
+			if (!isNaN(parsedDl)) {
+				return parsedDl;
+			}
+		}
+		return null;
 	}
 
-	set deadline(value: string | null) {
+	set deadline(value: number | null) {
 		if (value) {
-			this.searchParams.set('dl', value);
+			this.searchParams.set('dl', value.toString());
 		} else {
 			this.searchParams.delete('dl');
 		}
@@ -180,6 +223,18 @@ class Payto {
 		this.setHostnameParts(value, 2);
 	}
 
+	get item(): string | null {
+		return this.searchParams.get('item');
+	}
+
+	set item(value: string | null) {
+		if (value !== null && value.length <= 40) {
+			this.searchParams.set('item', value);
+		} else {
+			this.searchParams.delete('item');
+		}
+	}
+
 	get location(): string | null {
 		return this.searchParams.get('loc');
 	}
@@ -210,6 +265,18 @@ class Payto {
 
 	set network(value: string) {
 		this.url.hostname = value.toLowerCase();
+	}
+
+	get organization(): string | null {
+		return this.searchParams.get('org');
+	}
+
+	set organization(value: string | null) {
+		if (value !== null && value.length <= 25) {
+			this.searchParams.set('org', value);
+		} else {
+			this.searchParams.delete('org');
+		}
 	}
 
 	get origin(): string | null {
@@ -281,12 +348,14 @@ class Payto {
 		this.setHostnameParts(value, 3);
 	}
 
-	get routingNumber(): string | null {
-		return this.getHostnameParts(this.pathname.split('/'), 'ach', 2);
+	get routingNumber(): number | null {
+		const routingNumberStr = this.getHostnameParts(this.pathname.split('/'), 'ach', 2);
+		return routingNumberStr !== null ? parseInt(routingNumberStr, 10) : null;
 	}
 
-	set routingNumber(value: string | null) {
-		this.setHostnameParts(value, 2);
+	set routingNumber(value: number | null) {
+		const routingNumberStr = value !== null ? value.toString() : null;
+		this.setHostnameParts(routingNumberStr, 2);
 	}
 
 	get search(): string {
@@ -375,7 +444,10 @@ class Payto {
 		if (this.currency[1]) obj.fiat = this.currency[1];
 		if (this.amount) obj.amount = this.amount;
 		if (this.address) obj.address = this.address;
+		if (this.barcode) obj.barcode = this.barcode;
 		if (this.bic) obj.bic = this.bic;
+		if (this.colorBackground) obj.colorBackground = this.colorBackground;
+		if (this.colorForeground) obj.colorForeground = this.colorForeground;
 		if (this.deadline) obj.deadline = this.deadline;
 		if (this.donate) obj.donate = this.donate;
 		if (this.hash) obj.hash = this.hash;
@@ -383,10 +455,12 @@ class Payto {
 		if (this.hostname) obj.hostname = this.hostname;
 		if (this.href) obj.href = this.href;
 		if (this.iban) obj.iban = this.iban;
+		if (this.item) obj.item = this.item
 		if (this.location) obj.location = this.location;
 		if (this.message) obj.message = this.message;
 		if (this.network) obj.network = this.network;
 		if (this.origin) obj.origin = this.origin;
+		if (this.organization) obj.organization = this.organization;
 		if (this.password) obj.password = this.password;
 		if (this.pathname) obj.pathname = this.pathname;
 		if (this.protocol) obj.protocol = this.protocol;

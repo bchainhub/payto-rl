@@ -15,14 +15,23 @@ declare class Payto {
 	get asset(): string | null;
 	set asset(value: string | null);
 
+	get barcode(): string | null;
+	set barcode(value: string | null);
+
 	get bic(): string | null;
 	set bic(value: string | null);
+
+	get colorBackground(): string | null;
+    set colorBackground(value: string | null);
+
+	get colorForeground(): string | null;
+    set colorForeground(value: string | null);
 
 	get currency(): [string, string?, string?];
 	set currency(value: [string?, string?, number?]);
 
-	get deadline(): string | null;
-	set deadline(value: string | null);
+	get deadline(): number | null;
+	set deadline(value: number | null);
 
 	get donate(): boolean;
 	set donate(value: boolean);
@@ -45,6 +54,9 @@ declare class Payto {
 	get iban(): string | null;
 	set iban(value: string | null);
 
+	get item(): string | null;
+    set item(value: string | null);
+
 	get location(): string | null;
 	set location(value: string | null);
 
@@ -53,6 +65,9 @@ declare class Payto {
 
 	get network(): string;
 	set network(value: string);
+
+	get organization(): string | null;
+    set organization(value: string | null);
 
 	get origin(): string | null;
 
@@ -77,8 +92,8 @@ declare class Payto {
 	get route(): string | null;
 	set route(value: string | null);
 
-	get routingNumber(): string | null;
-	set routingNumber(value: string | null);
+	get routingNumber(): number | null;
+	set routingNumber(value: number | null);
 
 	get search(): string;
 	set search(value: string);

@@ -94,6 +94,10 @@ Gets or sets the amount component of the PRL. Amount consists of the number of u
 
 Gets or sets the asset component of the PRL. Asset is the currency in the amount field. Can be ticker or smart contract address.
 
+##### `barcode: string | null` (design value)
+
+Gets or sets the barcode component of the PRL. Values `pdf417`, `aztec` and `0` are supported, where `0` is the boolean value (false) to hide the barcode.
+
 ##### `bic: string | null`
 
 Gets or sets the BIC component of the PRL.
@@ -102,9 +106,17 @@ Gets or sets the BIC component of the PRL.
 
 Gets or sets the currency component of the PRL.
 
-##### `deadline: string | null`
+##### `colorBackground: string | null` (design value)
 
-Gets or sets the deadline component of the PRL.
+Gets or sets the background color 6-hexcode component of the PRL.
+
+##### `colorForeground: string | null` (design value)
+
+Gets or sets the foreground color 6-hexcode component of the PRL.
+
+##### `deadline: number | null`
+
+Gets or sets the deadline component in Unix timestamp of the PRL.
 
 ##### `donate: string | null`
 
@@ -134,6 +146,10 @@ Gets or sets the href component of the PRL.
 
 Gets or sets the IBAN component of the PRL.
 
+##### `item: string | null` (design value)
+
+Gets or sets the item name component of the PRL.
+
 ##### `location: string | null`
 
 Gets or sets the location component of the PRL.
@@ -145,6 +161,10 @@ Gets or sets the message component of the PRL.
 ##### `network: string`
 
 Gets or sets the network component of the PRL.
+
+##### `organization: string | null` (design value)
+
+Gets or sets the organization name component of the PRL.
 
 ##### `origin: string | null`
 
@@ -178,7 +198,7 @@ Gets or sets the recurring component of the PRL.
 
 Gets or sets the route component of the PRL.
 
-##### `routingNumber: string | null`
+##### `routingNumber: number | null`
 
 Gets or sets the routing number component of the PRL.
 

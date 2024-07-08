@@ -51,9 +51,9 @@ test('get and set value', () => {
 
 test('get and set deadline', () => {
 	const payto = new Payto('payto://btc/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?dl=1672531199');
-	assert.is(payto.deadline, '1672531199');
-	payto.deadline = '1672617599';
-	assert.is(payto.deadline, '1672617599');
+	assert.is(payto.deadline, 1672531199);
+	payto.deadline = 1672617599;
+	assert.is(payto.deadline, 1672617599);
 });
 
 test('get and set donate', () => {
@@ -84,20 +84,21 @@ test('get and set fiat', () => {
 });
 
 test('toJSONObject', () => {
-	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur');
+	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur&color-f=001BEE');
 	const jsonObject = payto.toJSONObject();
 	assert.equal(jsonObject, {
 		address: 'cb7147879011ea207df5b35a24ca6f0859dcfb145999',
 		amount: 'ctn:10.01',
+		colorForeground: '001bee',
 		asset: 'ctn',
 		fiat: 'eur',
 		host: 'xcb',
 		hostname: 'xcb',
-		href: 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur',
+		href: 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur&color-f=001BEE',
 		network: 'xcb',
 		pathname: '/cb7147879011ea207df5b35a24ca6f0859dcfb145999',
 		protocol: 'payto:',
-		search: '?amount=ctn:10.01&fiat=eur',
+		search: '?amount=ctn:10.01&fiat=eur&color-f=001BEE',
 		value: 10.01
 	});
 });
