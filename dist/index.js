@@ -44,11 +44,44 @@ class Payto {
     set asset(value) {
         this.currency = [value];
     }
+    get barcode() {
+        return this.searchParams.get('barcode');
+    }
+    set barcode(value) {
+        if (value && value.toLowerCase() in ['pdf417', 'aztec', '0']) {
+            this.searchParams.set('amount', value.toLowerCase());
+        }
+        else {
+            this.searchParams.delete('amount');
+        }
+    }
     get bic() {
         return this.getHostnameParts(this.pathname.split('/'), 'bic', 2);
     }
     set bic(value) {
         this.setHostnameParts(value, 2);
+    }
+    get colorBackground() {
+        return this.searchParams.get('color-b')?.toLowerCase() || null;
+    }
+    set colorBackground(value) {
+        if (value && /[0-9a-fA-F]{6}/.test(value)) {
+            this.searchParams.set('color-b', value.toLowerCase());
+        }
+        else {
+            this.searchParams.delete('color-b');
+        }
+    }
+    get colorForeground() {
+        return this.searchParams.get('color-f')?.toLowerCase() || null;
+    }
+    set colorForeground(value) {
+        if (value && /[0-9a-fA-F]{6}/.test(value)) {
+            this.searchParams.set('color-f', value.toLowerCase());
+        }
+        else {
+            this.searchParams.delete('color-f');
+        }
     }
     get currency() {
         const result = [null, null];
@@ -89,11 +122,18 @@ class Payto {
         }
     }
     get deadline() {
-        return this.searchParams.get('dl');
+        const dl = this.searchParams.get('dl');
+        if (dl !== null) {
+            const parsedDl = parseInt(dl, 10);
+            if (!isNaN(parsedDl)) {
+                return parsedDl;
+            }
+        }
+        return null;
     }
     set deadline(value) {
         if (value) {
-            this.searchParams.set('dl', value);
+            this.searchParams.set('dl', value.toString());
         }
         else {
             this.searchParams.delete('dl');
@@ -158,6 +198,17 @@ class Payto {
     set iban(value) {
         this.setHostnameParts(value, 2);
     }
+    get item() {
+        return this.searchParams.get('item');
+    }
+    set item(value) {
+        if (value !== null && value.length <= 40) {
+            this.searchParams.set('item', value);
+        }
+        else {
+            this.searchParams.delete('item');
+        }
+    }
     get location() {
         return this.searchParams.get('loc');
     }
@@ -185,6 +236,17 @@ class Payto {
     }
     set network(value) {
         this.url.hostname = value.toLowerCase();
+    }
+    get organization() {
+        return this.searchParams.get('org');
+    }
+    set organization(value) {
+        if (value !== null && value.length <= 25) {
+            this.searchParams.set('org', value);
+        }
+        else {
+            this.searchParams.delete('org');
+        }
     }
     get origin() {
         const origin = this.url.origin;
@@ -243,10 +305,12 @@ class Payto {
         this.setHostnameParts(value, 3);
     }
     get routingNumber() {
-        return this.getHostnameParts(this.pathname.split('/'), 'ach', 2);
+        const routingNumberStr = this.getHostnameParts(this.pathname.split('/'), 'ach', 2);
+        return routingNumberStr !== null ? parseInt(routingNumberStr, 10) : null;
     }
     set routingNumber(value) {
-        this.setHostnameParts(value, 2);
+        const routingNumberStr = value !== null ? value.toString() : null;
+        this.setHostnameParts(routingNumberStr, 2);
     }
     get search() {
         return this.url.search;
@@ -331,8 +395,14 @@ class Payto {
             obj.amount = this.amount;
         if (this.address)
             obj.address = this.address;
+        if (this.barcode)
+            obj.barcode = this.barcode;
         if (this.bic)
             obj.bic = this.bic;
+        if (this.colorBackground)
+            obj.colorBackground = this.colorBackground;
+        if (this.colorForeground)
+            obj.colorForeground = this.colorForeground;
         if (this.deadline)
             obj.deadline = this.deadline;
         if (this.donate)
@@ -347,6 +417,8 @@ class Payto {
             obj.href = this.href;
         if (this.iban)
             obj.iban = this.iban;
+        if (this.item)
+            obj.item = this.item;
         if (this.location)
             obj.location = this.location;
         if (this.message)
@@ -355,6 +427,8 @@ class Payto {
             obj.network = this.network;
         if (this.origin)
             obj.origin = this.origin;
+        if (this.organization)
+            obj.organization = this.organization;
         if (this.password)
             obj.password = this.password;
         if (this.pathname)
