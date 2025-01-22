@@ -6,6 +6,12 @@ declare class Payto {
 	private getHostnameParts(array: string[], type: string | null, position?: number): string | null;
 	private setHostnameParts(value: string | null, position?: number): void;
 
+	get accountAlias(): string | null;
+	set accountAlias(value: string | null);
+
+	get accountNumber(): number | null;
+	set accountNumber(value: number | null);
+
 	get address(): string | null;
 	set address(value: string | null);
 
@@ -109,15 +115,12 @@ declare class Payto {
 	get value(): number | null;
 	set value(value: number | null);
 
-	get accountNumber(): number | null;
-	set accountNumber(value: number | null);
-
 	get void(): string | null;
 	set void(value: string | null);
 
 	toString(): string;
 	toJSON(): string;
-	toJSONObject(): object;
+	toJSONObject(): { [key: string]: any };
 }
 
 export default Payto;

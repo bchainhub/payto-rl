@@ -5,6 +5,7 @@ class Payto {
 	private static readonly ACCOUNT_NUMBER_REGEX = /^(\d{7,14})$/;
 	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
 	private static readonly GEO_LOCATION_REGEX = /^(\+|-)?(?:90(?:\.0{1,6})?|(?:[0-9]|[1-8][0-9])(?:\.[0-9]{1,6})?),(\+|-)?(?:180(?:\.0{1,6})?|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:\.[0-9]{1,6})?)$/;
+	private static readonly EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 	private url: URL;
 
@@ -32,10 +33,32 @@ class Payto {
 		this.pathname = '/' + addressArray.filter(part => part).join('/');
 	}
 
+	get accountAlias(): string | null {
+		if (this.hostname === 'upi' || this.hostname === 'pix') {
+			const alias = this.getHostnameParts(this.pathname.split('/'), null, 1);
+			if (alias && Payto.EMAIL_REGEX.test(alias)) {
+				return alias;
+			}
+		}
+		return null;
+	}
+
+	set accountAlias(value: string | null) {
+		if (value) {
+			if (!Payto.EMAIL_REGEX.test(value)) {
+				throw new Error('Invalid email address format');
+			}
+			this.setHostnameParts(value, 1);
+		} else {
+			this.setHostnameParts(null, 1);
+		}
+	}
+
 	get accountNumber(): number | null {
-		if (this.pathname.split('/').length > 1) {
-			const accountStr = this.pathname.split('/')[1];
-			if (Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
+		if (this.hostname === 'ach') {
+			const parts = this.pathname.split('/').filter(part => part);
+			const accountStr = parts.length > 2 ? parts[2] : parts[1];
+			if (accountStr && Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
 				return parseInt(accountStr, 10);
 			}
 		}
@@ -43,15 +66,22 @@ class Payto {
 	}
 
 	set accountNumber(value: number | null) {
+		if (!this.hostname || this.hostname !== 'ach') {
+			return;
+		}
+
 		if (value !== null) {
 			const accountStr = value.toString();
 			if (!Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
-				throw new Error('Invalid account number format. Must be 7-14 digits.');
+				throw new Error('Invalid account number format');
 			}
-			this.pathname = '/' + accountStr;
-		} else {
-			this.pathname = '/';
 		}
+
+		const parts = this.pathname.split('/').filter(part => part);
+		const hasRouting = parts.length > 1 && Payto.ROUTING_NUMBER_REGEX.test(parts[1]);
+		const position = hasRouting ? 3 : 2;
+
+		this.setHostnameParts(value?.toString() ?? null, position);
 	}
 
 	get address(): string | null {
@@ -215,34 +245,58 @@ class Payto {
 		}
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
+	 */
 	get hash(): string {
 		return this.url.hash;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
+	 */
 	set hash(value: string) {
 		this.url.hash = value;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/host
+	 */
 	get host(): string {
 		return this.url.host;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/host
+	 */
 	set host(value: string) {
 		this.url.host = value;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/hostname
+	 */
 	get hostname(): string {
 		return this.url.hostname.toLowerCase();
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/hostname
+	 */
 	set hostname(value: string) {
 		this.url.hostname = value.toLowerCase();
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/href
+	 */
 	get href(): string {
 		return this.url.href;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/href
+	 */
 	set href(value: string) {
 		this.url.href = value;
 	}
@@ -279,8 +333,8 @@ class Payto {
 
 		const voidType = this.void;
 		if (!voidType) {
-            throw new Error('Void type must be set before setting location');
-        }
+			throw new Error('Void type must be set before setting location');
+		}
 
 		if (voidType === 'geo') {
 			if (!Payto.GEO_LOCATION_REGEX.test(value.toString())) {
@@ -327,39 +381,66 @@ class Payto {
 		}
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/origin
+	 */
 	get origin(): string | null {
 		const origin = this.url.origin;
 		return origin === 'null' || origin === '' ? null : origin;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/password
+	 */
 	get password(): string {
 		return this.url.password;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/password
+	 */
 	set password(value: string) {
 		this.url.password = value;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/pathname
+	 */
 	get pathname(): string {
 		return this.url.pathname;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/pathname
+	 */
 	set pathname(value: string) {
 		this.url.pathname = value;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/port
+	 */
 	get port(): string {
 		return this.url.port;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/port
+	 */
 	set port(value: string) {
 		this.url.port = value;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/protocol
+	 */
 	get protocol(): string {
 		return this.url.protocol;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/protocol
+	 */
 	set protocol(value: string) {
 		this.url.protocol = value;
 	}
@@ -409,14 +490,23 @@ class Payto {
 		this.setHostnameParts(routingNumberStr, 2);
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/search
+	 */
 	get search(): string {
 		return this.url.search;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/search
+	 */
 	set search(value: string) {
 		this.url.search = value;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams
+	 */
 	get searchParams(): URLSearchParams {
 		return this.url.searchParams;
 	}
@@ -462,10 +552,16 @@ class Payto {
 		}
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/username
+	 */
 	get username(): string {
 		return this.url.username;
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/username
+	 */
 	set username(value: string) {
 		this.url.username = value;
 	}
@@ -524,52 +620,64 @@ class Payto {
 		}
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/toString
+	 */
 	toString(): string {
 		return this.url.toString();
 	}
 
+	/**
+	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/toJSON
+	 */
 	toJSON(): string {
 		return this.url.toJSON();
 	}
 
 	toJSONObject(): object {
 		const obj: { [key: string]: any } = {};
+
+		// URL properties
 		if (this.port) obj.port = this.port;
-		if (this.currency[0]) obj.asset = this.currency[0];
-		if (this.currency[1]) obj.fiat = this.currency[1];
+		if (this.host) obj.host = this.host;
+		if (this.hostname) obj.hostname = this.hostname;
+		if (this.href) obj.href = this.href;
+		if (this.origin) obj.origin = this.origin;
+		if (this.password) obj.password = this.password;
+		if (this.pathname) obj.pathname = this.pathname;
+		if (this.protocol) obj.protocol = this.protocol;
+		if (this.search) obj.search = this.search;
+		if (this.username) obj.username = this.username;
+
+		// PayTo-specific properties
+		if (this.accountAlias) obj.accountAlias = this.accountAlias;
 		if (this.accountNumber) obj.accountNumber = this.accountNumber;
-		if (this.amount) obj.amount = this.amount;
 		if (this.address) obj.address = this.address;
+		if (this.amount) obj.amount = this.amount;
+		if (this.asset) obj.asset = this.asset;
 		if (this.barcode) obj.barcode = this.barcode;
 		if (this.bic) obj.bic = this.bic;
 		if (this.colorBackground) obj.colorBackground = this.colorBackground;
 		if (this.colorForeground) obj.colorForeground = this.colorForeground;
+		if (this.currency[0] || this.currency[1]) obj.currency = this.currency;
 		if (this.deadline) obj.deadline = this.deadline;
-		if (this.donate) obj.donate = this.donate;
+		if (this.donate !== null) obj.donate = this.donate;
+		if (this.fiat) obj.fiat = this.fiat;
 		if (this.hash) obj.hash = this.hash;
-		if (this.host) obj.host = this.host;
-		if (this.hostname) obj.hostname = this.hostname;
-		if (this.href) obj.href = this.href;
 		if (this.iban) obj.iban = this.iban;
-		if (this.item) obj.item = this.item
+		if (this.item) obj.item = this.item;
 		if (this.location) obj.location = this.location;
 		if (this.message) obj.message = this.message;
 		if (this.network) obj.network = this.network;
-		if (this.origin) obj.origin = this.origin;
 		if (this.organization) obj.organization = this.organization;
-		if (this.password) obj.password = this.password;
-		if (this.pathname) obj.pathname = this.pathname;
-		if (this.protocol) obj.protocol = this.protocol;
 		if (this.receiverName) obj.receiverName = this.receiverName;
 		if (this.recurring) obj.recurring = this.recurring;
 		if (this.route) obj.route = this.route;
 		if (this.routingNumber) obj.routingNumber = this.routingNumber;
-		if (this.search) obj.search = this.search;
 		if (this.split) obj.split = this.split;
-		if (this.swap) obj.swap = this.swap;
-		if (this.username) obj.username = this.username;
-		if (this.value) obj.value = this.value;
+		if (this.value !== null) obj.value = this.value;
 		if (this.void) obj.void = this.void;
+
 		return obj;
 	}
 }
