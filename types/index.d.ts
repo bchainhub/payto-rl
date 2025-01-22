@@ -120,7 +120,7 @@ declare class Payto {
 
 	toString(): string;
 	toJSON(): string;
-	toJSONObject(): { [key: string]: any };
+	toJSONObject(): Record<string, any>;
 }
 
 export default Payto;

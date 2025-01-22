@@ -149,12 +149,16 @@ The library includes TypeScript type definitions and runtime validation for:
 ## Payment System Support
 
 ### ACH Payments
+
 Supports two formats:
+
 - `payto://ach/routing/account` (with routing number)
 - `payto://ach/account` (account number only)
 
 ### UPI/PIX Payments
+
 Email-based payment identifiers:
+
 - `payto://upi/email@example.com`
 - `payto://pix/email@example.com`
 
