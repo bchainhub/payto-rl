@@ -1,13 +1,23 @@
 {
 	"compilerOptions": {
-		"target": "ES2020",
-		"module": "Node16",
+		"target": "ESNext",
+		"module": "NodeNext",
 		"outDir": "./dist",
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 		"removeComments": true,
 		"declaration": true,
-		"declarationDir": "./dist"
+		"declarationDir": "./dist",
+		"preserveConstEnums": true,
+		"useDefineForClassFields": true,
+		"stripInternal": true,
+		"verbatimModuleSyntax": true,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"strictFunctionTypes": true,
+		"strictPropertyInitialization": true,
+		"exactOptionalPropertyTypes": true,
+		"noUncheckedIndexedAccess": false
 	},
 	"include": ["src/**/*.ts"],
 	"exclude": ["node_modules", "test"]

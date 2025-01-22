@@ -1,3 +1,8 @@
+type JSONObject = {
+	[key: string]: any;
+	[key: number]: never;
+};
+
 class Payto {
 	private static readonly BIC_REGEX = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/i;
 	private static readonly ROUTING_NUMBER_REGEX = /^(\d{9})$/;
@@ -108,8 +113,12 @@ class Payto {
 		return this.currency[0];
 	}
 
-	set asset(value: string | undefined) {
-		this.currency = [value];
+	set asset(value: string | null) {
+		if (value === null) {
+			this.currency = [null, null, null];
+		} else {
+			this.currency = [value, null, null];
+		}
 	}
 
 	get barcode(): string | null {
@@ -176,7 +185,7 @@ class Payto {
 		return result;
 	}
 
-	set currency(value: [string?, string?, number?]) {
+	set currency(value: Array<string | number | null | undefined>) {
 		const [token, fiat, amount] = value;
 		const amountValue = this.searchParams.get('amount');
 		let oldToken, oldValue;
@@ -189,7 +198,9 @@ class Payto {
 				oldValue = amountArray[0];
 			}
 		}
-		if (fiat) this.fiat = fiat.toLowerCase();
+		if (fiat && typeof fiat === 'string') {
+			this.fiat = fiat.toLowerCase();
+		}
 		if (token) {
 			this.amount = `${token}:${amount || (oldValue || '')}`;
 		} else if (amount) {
@@ -634,8 +645,8 @@ class Payto {
 		return this.url.toJSON();
 	}
 
-	toJSONObject(): object {
-		const obj: { [key: string]: any } = {};
+	toJSONObject(): JSONObject {
+		const obj: JSONObject = {};
 
 		// URL properties
 		if (this.port) obj.port = this.port;

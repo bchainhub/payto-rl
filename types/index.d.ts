@@ -1,3 +1,8 @@
+export type JSONObject = {
+	[key: string]: any;
+	[key: number]: never;
+};
+
 declare class Payto {
 	private url: URL;
 
@@ -33,8 +38,8 @@ declare class Payto {
 	get colorForeground(): string | null;
 	set colorForeground(value: string | null);
 
-	get currency(): [string, string?, string?];
-	set currency(value: [string, string?, string?]);
+	get currency(): [string | null, string | null];
+	set currency(value: Array<string | number | null | undefined>);
 
 	get deadline(): number | null;
 	set deadline(value: number | null);
@@ -120,7 +125,7 @@ declare class Payto {
 
 	toString(): string;
 	toJSON(): string;
-	toJSONObject(): Record<string, any>;
+	toJSONObject(): JSONObject;
 }
 
 export default Payto;
