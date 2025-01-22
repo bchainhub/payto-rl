@@ -9,6 +9,7 @@ yarn-error.log
 package-lock.json
 
 /dist-test/
+/dist/
 
 .DS_Store
 .AppleDouble

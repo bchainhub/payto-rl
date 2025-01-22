@@ -5,9 +5,9 @@
 		"outDir": "./dist",
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
-		"typeRoots": ["./node_modules/@types", "./types"],
 		"removeComments": true,
-		"declaration": true
+		"declaration": true,
+		"declarationDir": "./dist"
 	},
 	"include": ["src/**/*.ts"],
 	"exclude": ["node_modules", "test"]

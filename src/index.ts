@@ -1,4 +1,11 @@
 class Payto {
+	private static readonly BIC_REGEX = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/i;
+	private static readonly ROUTING_NUMBER_REGEX = /^(\d{9})$/;
+	private static readonly UNIX_TIMESTAMP_REGEX = /^\d+$/;
+	private static readonly ACCOUNT_NUMBER_REGEX = /^(\d{7,14})$/;
+	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
+	private static readonly GEO_LOCATION_REGEX = /^(\+|-)?(?:90(?:\.0{1,6})?|(?:[0-9]|[1-8][0-9])(?:\.[0-9]{1,6})?),(\+|-)?(?:180(?:\.0{1,6})?|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:\.[0-9]{1,6})?)$/;
+
 	private url: URL;
 
 	constructor(paytoString: string) {
@@ -25,6 +32,28 @@ class Payto {
 		this.pathname = '/' + addressArray.filter(part => part).join('/');
 	}
 
+	get accountNumber(): number | null {
+		if (this.pathname.split('/').length > 1) {
+			const accountStr = this.pathname.split('/')[1];
+			if (Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
+				return parseInt(accountStr, 10);
+			}
+		}
+		return null;
+	}
+
+	set accountNumber(value: number | null) {
+		if (value !== null) {
+			const accountStr = value.toString();
+			if (!Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
+				throw new Error('Invalid account number format. Must be 7-14 digits.');
+			}
+			this.pathname = '/' + accountStr;
+		} else {
+			this.pathname = '/';
+		}
+	}
+
 	get address(): string | null {
 		return this.getHostnameParts(this.pathname.split('/'), null, 1);
 	}
@@ -39,7 +68,7 @@ class Payto {
 
 	set amount(value: string | null) {
 		if (value) {
-			this.searchParams.set('amount', value);
+			this.searchParams.set('amount', value.toString());
 		} else {
 			this.searchParams.delete('amount');
 		}
@@ -54,23 +83,27 @@ class Payto {
 	}
 
 	get barcode(): string | null {
-		return this.searchParams.get('barcode');
+		return this.searchParams.get('barcode')?.toLowerCase() || null;
 	}
 
 	set barcode(value: string | null) {
-		if (value && value.toLowerCase() in ['pdf417', 'aztec', '0']) {
-			this.searchParams.set('amount', value.toLowerCase());
+		if (value) {
+			this.searchParams.set('barcode', value);
 		} else {
-			this.searchParams.delete('amount');
+			this.searchParams.delete('barcode');
 		}
 	}
 
 	get bic(): string | null {
-		return this.getHostnameParts(this.pathname.split('/'), 'bic', 2);
+		const bicStr = this.getHostnameParts(this.pathname.split('/'), 'bic', 2)?.toUpperCase();
+		return bicStr as string | null;
 	}
 
 	set bic(value: string | null) {
-		this.setHostnameParts(value, 2);
+		if (value && !Payto.BIC_REGEX.test(value)) {
+			throw new Error('Invalid BIC format');
+		}
+		this.setHostnameParts(value?.toUpperCase() ?? null, 2);
 	}
 
 	get colorBackground(): string | null {
@@ -136,36 +169,35 @@ class Payto {
 
 	get deadline(): number | null {
 		const dl = this.searchParams.get('dl');
-		if (dl !== null) {
-			const parsedDl = parseInt(dl, 10);
-			if (!isNaN(parsedDl)) {
-				return parsedDl;
-			}
+		if (dl !== null && Payto.UNIX_TIMESTAMP_REGEX.test(dl)) {
+			const timestamp = parseInt(dl, 10);
+			return timestamp >= 0 ? timestamp : null;
 		}
 		return null;
 	}
 
 	set deadline(value: number | null) {
-		if (value) {
+		if (value !== null) {
+			if (!Number.isInteger(value) || value < 0 || !Payto.UNIX_TIMESTAMP_REGEX.test(value.toString())) {
+				throw new Error('Invalid deadline format. Must be a positive integer (Unix timestamp).');
+			}
 			this.searchParams.set('dl', value.toString());
 		} else {
 			this.searchParams.delete('dl');
 		}
 	}
 
-	get donate(): string | null {
+	get donate(): boolean | null {
 		if (this.searchParams.has('donate')) {
 			const donateValue = this.searchParams.get('donate');
-			return donateValue !== null ? donateValue : '1';
+			return donateValue !== null ? (donateValue === '1' ? true : (donateValue === '0' ? false : null)) : null;
 		}
 		return null;
 	}
 
-	set donate(value: string | null) {
-		if (value === '0' || value === '1') {
-			this.searchParams.set('donate', value);
-		} else if (value) {
-			this.searchParams.set('donate', '1');
+	set donate(value: boolean | null) {
+		if (value === true || value === false) {
+			this.searchParams.set('donate', value ? '1' : '0');
 		} else {
 			this.searchParams.delete('donate');
 		}
@@ -236,15 +268,31 @@ class Payto {
 	}
 
 	get location(): string | null {
-		return this.searchParams.get('loc');
+		return this.searchParams.get('loc') as string | null;
 	}
 
 	set location(value: string | null) {
-		if (value) {
-			this.searchParams.set('loc', value);
-		} else {
+		if (value === null) {
 			this.searchParams.delete('loc');
+			return;
 		}
+
+		const voidType = this.void;
+		if (!voidType) {
+            throw new Error('Void type must be set before setting location');
+        }
+
+		if (voidType === 'geo') {
+			if (!Payto.GEO_LOCATION_REGEX.test(value.toString())) {
+				throw new Error('Invalid geo location format. Must be "latitude,longitude" with valid coordinates.');
+			}
+		} else if (voidType === 'plus') {
+			if (!Payto.PLUS_CODE_REGEX.test(value.toString())) {
+				throw new Error('Invalid plus code format.');
+			}
+		}
+
+		this.searchParams.set('loc', value.toString());
 	}
 
 	get message(): string | null {
@@ -354,6 +402,9 @@ class Payto {
 	}
 
 	set routingNumber(value: number | null) {
+		if (value !== null && !Payto.ROUTING_NUMBER_REGEX.test(value.toString())) {
+			throw new Error('Invalid routing number format. Must be exactly 9 digits.');
+		}
 		const routingNumberStr = value !== null ? value.toString() : null;
 		this.setHostnameParts(routingNumberStr, 2);
 	}
@@ -374,19 +425,40 @@ class Payto {
 		const splitValue = this.searchParams.get('split');
 		if (splitValue) {
 			const [amountPart, receiver] = splitValue.split('@');
-			const [prefix, amount] = amountPart.split(':');
-			return [receiver, amount, prefix === 'p'];
+			if (!receiver || !amountPart) return null;
+
+			const isPercentage = amountPart.startsWith('p:');
+			const amount = isPercentage ? amountPart.slice(2) : amountPart;
+
+			return [receiver, amount, isPercentage];
 		}
 		return null;
 	}
 
 	set split(value: [string, string, boolean] | null) {
-		if (value) {
-			const [receiver, amount, percentage] = value;
-			const prefix = percentage ? 'p:' : '';
-			this.searchParams.set('split', `${prefix}${amount}@${receiver}`);
-		} else {
+		if (value === null) {
 			this.searchParams.delete('split');
+			return;
+		}
+
+		const [receiver, amount, percentage] = value;
+		if (!receiver || !amount) {
+			throw new Error('Split requires both receiver and amount');
+		}
+
+		const prefix = percentage ? 'p:' : '';
+		this.searchParams.set('split', `${prefix}${amount}@${receiver}`);
+	}
+
+	get swap(): string | null {
+		return this.searchParams.get('swap')?.toLowerCase() || null;
+	}
+
+	set swap(value: string | null) {
+		if (value) {
+			this.searchParams.set('swap', value.toLowerCase());
+		} else {
+			this.searchParams.delete('swap');
 		}
 	}
 
@@ -416,15 +488,38 @@ class Payto {
 	}
 
 	set value(value: number | null) {
+		if (value === null) {
+			return;
+		}
+
+		const amount = this.searchParams.get('amount');
+		if (amount) {
+			const amountArray = amount.split(':');
+			if (amountArray[1]) {
+				this.searchParams.set('amount', `${amountArray[0]}:${value}`);
+			} else {
+				this.searchParams.set('amount', value.toString());
+			}
+		} else {
+			this.searchParams.set('amount', value.toString());
+		}
+	}
+
+	get void(): string | null {
+		if (this.hostname === 'void' && this.pathname.length > 1) {
+			const parts = this.pathname.split('/');
+			return parts[1]?.toLowerCase() || null;
+		}
+		return null;
+	}
+
+	set void(value: string | null) {
 		if (value) {
-			const amount = this.searchParams.get('amount');
-			if (amount) {
-				const amountArray = amount.split(':');
-				if (amountArray[1]) {
-					this.searchParams.set('amount', amountArray[0] + ':' + value);
-				} else {
-					this.searchParams.set('amount', value.toString());
-				}
+			this.hostname = 'void';
+			this.pathname = '/' + value.toLowerCase();
+		} else {
+			if (this.hostname === 'void') {
+				this.pathname = '/';
 			}
 		}
 	}
@@ -442,6 +537,7 @@ class Payto {
 		if (this.port) obj.port = this.port;
 		if (this.currency[0]) obj.asset = this.currency[0];
 		if (this.currency[1]) obj.fiat = this.currency[1];
+		if (this.accountNumber) obj.accountNumber = this.accountNumber;
 		if (this.amount) obj.amount = this.amount;
 		if (this.address) obj.address = this.address;
 		if (this.barcode) obj.barcode = this.barcode;
@@ -470,8 +566,10 @@ class Payto {
 		if (this.routingNumber) obj.routingNumber = this.routingNumber;
 		if (this.search) obj.search = this.search;
 		if (this.split) obj.split = this.split;
+		if (this.swap) obj.swap = this.swap;
 		if (this.username) obj.username = this.username;
 		if (this.value) obj.value = this.value;
+		if (this.void) obj.void = this.void;
 		return obj;
 	}
 }

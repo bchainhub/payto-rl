@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import Payto from 'payto-rl';
+import Payto from '../dist/index.js';
 
 const test = suite('Payto');
 
@@ -58,9 +58,9 @@ test('get and set deadline', () => {
 
 test('get and set donate', () => {
 	const payto = new Payto('payto://btc/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?donate=1');
-	assert.is(payto.donate, '1');
-	payto.donate = '0';
-	assert.is(payto.donate, '0');
+	assert.is(payto.donate, true);
+	payto.donate = false;
+	assert.is(payto.donate, false);
 	payto.donate = null;
 	assert.is(payto.donate, null);
 });
@@ -101,6 +101,97 @@ test('toJSONObject', () => {
 		search: '?amount=ctn:10.01&fiat=eur&color-f=001BEE',
 		value: 10.01
 	});
+});
+
+test('get and set location with geo coordinates', () => {
+	const payto = new Payto('payto://void/geo');
+	payto.location = '51.5074,0.1278';
+	assert.is(payto.location, '51.5074,0.1278');
+	assert.throws(() => {
+		payto.location = '91.0000,0.1278'; // Invalid latitude
+	}, /Invalid geo location format/);
+	assert.throws(() => {
+		payto.location = '51.5074,181.0000'; // Invalid longitude
+	}, /Invalid geo location format/);
+});
+
+test('get and set location with plus code', () => {
+	const payto = new Payto('payto://void/plus');
+	payto.location = '8FVC9G8V+R9';
+	assert.is(payto.location, '8FVC9G8V+R9');
+	assert.throws(() => {
+		payto.location = 'INVALID+CODE';
+	}, /Invalid plus code format/);
+});
+
+test('get and set location with custom void type', () => {
+	const payto = new Payto('payto://void/custom');
+	payto.location = 'any value';
+	assert.is(payto.location, 'any value');
+});
+
+test('get and set void type', () => {
+	const payto = new Payto('payto://void/geo');
+	assert.is(payto.void, 'geo');
+	payto.void = 'plus';
+	assert.is(payto.void, 'plus');
+	payto.void = null;
+	assert.is(payto.void, null);
+});
+
+test('get and set colors', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.colorBackground = '00ff00';
+	assert.is(payto.colorBackground, '00ff00');
+	payto.colorForeground = 'ff0000';
+	assert.is(payto.colorForeground, 'ff0000');
+	// Invalid hex colors should be ignored
+	payto.colorBackground = 'invalid';
+	assert.is(payto.colorBackground, null);
+});
+
+test('get and set organization with length limit', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.organization = 'Valid Org Name';
+	assert.is(payto.organization, 'Valid Org Name');
+	payto.organization = 'This organization name is too long and should be ignored';
+	assert.is(payto.organization, null);
+});
+
+test('get and set item with length limit', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.item = 'Valid Item Description';
+	assert.is(payto.item, 'Valid Item Description');
+	payto.item = 'This item description is way too long and should be ignored because it exceeds forty characters';
+	assert.is(payto.item, null);
+});
+
+test('get and set split payment', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.split = ['receiver123', '50', true];  // 50% split
+	assert.equal(payto.split, ['receiver123', '50', true]);
+	payto.split = ['receiver456', '100', false];  // 100 unit split
+	assert.equal(payto.split, ['receiver456', '100', false]);
+	payto.split = null;
+	assert.is(payto.split, null);
+});
+
+test('get and set swap', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.swap = 'btc';
+	assert.is(payto.swap, 'btc');
+	payto.swap = null;
+	assert.is(payto.swap, null);
+});
+
+test('toJSONObject includes all properties', () => {
+	const payto = new Payto('payto://xcb/address?amount=10&color-b=00ff00&color-f=ff0000&org=TestOrg&item=TestItem');
+	const json = payto.toJSONObject();
+	assert.ok(json.hasOwnProperty('amount'));
+	assert.ok(json.hasOwnProperty('colorBackground'));
+	assert.ok(json.hasOwnProperty('colorForeground'));
+	assert.ok(json.hasOwnProperty('organization'));
+	assert.ok(json.hasOwnProperty('item'));
 });
 
 test.run();
