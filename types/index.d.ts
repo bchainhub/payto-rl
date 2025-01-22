@@ -22,19 +22,19 @@ declare class Payto {
 	set bic(value: string | null);
 
 	get colorBackground(): string | null;
-    set colorBackground(value: string | null);
+	set colorBackground(value: string | null);
 
 	get colorForeground(): string | null;
-    set colorForeground(value: string | null);
+	set colorForeground(value: string | null);
 
 	get currency(): [string, string?, string?];
-	set currency(value: [string?, string?, number?]);
+	set currency(value: [string, string?, string?]);
 
 	get deadline(): number | null;
 	set deadline(value: number | null);
 
-	get donate(): boolean;
-	set donate(value: boolean);
+	get donate(): boolean | null;
+	set donate(value: boolean | null);
 
 	get fiat(): string | null;
 	set fiat(value: string | null);
@@ -55,7 +55,7 @@ declare class Payto {
 	set iban(value: string | null);
 
 	get item(): string | null;
-    set item(value: string | null);
+	set item(value: string | null);
 
 	get location(): string | null;
 	set location(value: string | null);
@@ -67,7 +67,7 @@ declare class Payto {
 	set network(value: string);
 
 	get organization(): string | null;
-    set organization(value: string | null);
+	set organization(value: string | null);
 
 	get origin(): string | null;
 
@@ -108,6 +108,12 @@ declare class Payto {
 
 	get value(): number | null;
 	set value(value: number | null);
+
+	get accountNumber(): number | null;
+	set accountNumber(value: number | null);
+
+	get void(): string | null;
+	set void(value: string | null);
 
 	toString(): string;
 	toJSON(): string;

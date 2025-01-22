@@ -1,19 +1,14 @@
-
 # Payto-RL
 
-`payto-rl` is a TypeScript library for handling Payto resource locators (PRLs). This library is based on the [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) API and provides additional functionality for managing PRLs.
+`payto-rl` is a TypeScript library for handling Payto Resource Locators (PRLs). This library is based on the [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) API and provides additional functionality for managing PRLs.
 
 ## Installation
 
-You can install the `payto-rl` package using npm or yarn:
-
-### Using npm
+Install the `payto-rl` package using npm or yarn:
 
 ```sh
 npm install payto-rl
 ```
-
-### Using yarn
 
 ```sh
 yarn add payto-rl
@@ -21,220 +16,118 @@ yarn add payto-rl
 
 ## Usage
 
-Here is an example of how to use the `Payto-RL` package:
-
-### Example
+Here's an example of how to use the `payto-rl` package:
 
 ```typescript
 import Payto from 'payto-rl';
 
+// Basic payment URL
 const paytoString = 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur';
 const payto = new Payto(paytoString);
 
-console.log(payto.address); // Outputs: cb7147879011ea207df5b35a24ca6f0859dcfb145999
-console.log(payto.amount); // Outputs: ctn:10.01
-console.log(payto.value); // Outputs: 10.01
-console.log(payto.network); // Outputs: xcb
-console.log(payto.currency); // Outputs: ['ctn', 'eur']
+// Standard payment properties
+console.log(payto.address);  // 'cb7147879011ea207df5b35a24ca6f0859dcfb145999'
+console.log(payto.amount);   // 'ctn:10.01'
+console.log(payto.value);    // 10.01
+console.log(payto.network);  // 'xcb'
+console.log(payto.currency); // ['ctn', 'eur']
 
+// Update payment amount
 payto.value = 20.02;
-console.log(payto.amount); // Outputs: ctn:20.02
-console.log(payto.value); // Outputs: 20.02
-console.log(payto.fiat); // Outputs: eur
-// Then it should be payed 20.02 EUR in CTN to the address cb7147879011ea207df5b35a24ca6f0859dcfb145999 on the XCB network.
+console.log(payto.amount);   // 'ctn:20.02'
+console.log(payto.fiat);     // 'eur'
 
-console.log(payto.toJSONObject());
+// Geo location example
+const geoPayto = new Payto('payto://void/geo');
+geoPayto.location = '51.5074,0.1278';  // Valid coordinates
+console.log(geoPayto.void);     // 'geo'
+console.log(geoPayto.location); // '51.5074,0.1278'
 
-/*
-Outputs:
-{
-  address: 'cb7147879011ea207df5b35a24ca6f0859dcfb145999',
-  amount: 'ctn:20.02',
-  asset: 'ctn',
-  fiat: 'eur',
-  host: 'xcb',
-  hostname: 'xcb',
-  href: 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur',
-  network: 'xcb',
-  pathname: '/cb7147879011ea207df5b35a24ca6f0859dcfb145999',
-  protocol: 'payto:',
-  search: '?amount=ctn:10.01&fiat=eur',
-  value: 20.02
-}
-*/
+// Plus code example
+const plusPayto = new Payto('payto://void/plus');
+plusPayto.location = '8FVC9G8V+R9';  // Valid plus code
+console.log(plusPayto.void);     // 'plus'
+console.log(plusPayto.location); // '8FVC9G8V+R9'
 
-payto.currency = ['btc', 'usd', 12];
-console.log(payto.currency); // Outputs: ['btc', 'usd']
-console.log(payto.value); // Outputs: 12
+// Bank details example
+const bankPayto = new Payto('payto://bic/DEUTDEFF500');
+console.log(bankPayto.bic);           // 'DEUTDEFF500'
+bankPayto.routingNumber = 123456789;  // Valid 9-digit routing number
+console.log(bankPayto.routingNumber); // 123456789
 ```
 
-## API
+## API Reference
 
-### `Payto`
-
-#### Constructor
+### Constructor
 
 ```typescript
-constructor(paytoString: string)
+new Payto(paytoString: string)
 ```
 
-Creates a new `Payto` instance.
-
-#### Properties
-
-##### `address: string | null`
-
-Gets or sets the address component of the PRL.
-
-##### `amount: string | null`
-
-Gets or sets the amount component of the PRL. Amount consists of the number of units and the currency delimited by `:`.
-
-##### `asset: string | null`
-
-Gets or sets the asset component of the PRL. Asset is the currency in the amount field. Can be ticker or smart contract address.
-
-##### `barcode: string | null` (design value)
-
-Gets or sets the barcode component of the PRL. Values `pdf417`, `aztec` and `0` are supported, where `0` is the boolean value (false) to hide the barcode.
-
-##### `bic: string | null`
-
-Gets or sets the BIC component of the PRL.
-
-##### `currency: [string | null, string | null]`
-
-Gets or sets the currency component of the PRL.
-
-##### `colorBackground: string | null` (design value)
-
-Gets or sets the background color 6-hexcode component of the PRL.
-
-##### `colorForeground: string | null` (design value)
-
-Gets or sets the foreground color 6-hexcode component of the PRL.
-
-##### `deadline: number | null`
-
-Gets or sets the deadline component in Unix timestamp of the PRL.
-
-##### `donate: string | null`
-
-Gets or sets the donate component of the PRL.
-
-##### `fiat: string | null`
-
-Gets or sets the fiat component of the PRL.
-
-##### `hash: string`
-
-Gets or sets the hash component of the PRL.
-
-##### `host: string`
-
-Gets or sets the host component of the PRL.
-
-##### `hostname: string`
-
-Gets or sets the hostname component of the PRL.
-
-##### `href: string`
-
-Gets or sets the href component of the PRL.
-
-##### `iban: string | null`
-
-Gets or sets the IBAN component of the PRL.
-
-##### `item: string | null` (design value)
-
-Gets or sets the item name component of the PRL.
-
-##### `location: string | null`
-
-Gets or sets the location component of the PRL.
-
-##### `message: string | null`
-
-Gets or sets the message component of the PRL.
-
-##### `network: string`
-
-Gets or sets the network component of the PRL.
-
-##### `organization: string | null` (design value)
-
-Gets or sets the organization name component of the PRL.
-
-##### `origin: string | null`
-
-Gets the origin component of the PRL.
-
-##### `password: string`
-
-Gets or sets the password component of the PRL.
-
-##### `pathname: string`
-
-Gets or sets the pathname component of the PRL.
-
-##### `port: string`
-
-Gets or sets the port component of the PRL.
-
-##### `protocol: string`
-
-Gets or sets the protocol component of the PRL.
-
-##### `receiverName: string | null`
-
-Gets or sets the receiver name component of the PRL.
-
-##### `recurring: string | null`
-
-Gets or sets the recurring component of the PRL.
-
-##### `route: string | null`
-
-Gets or sets the route component of the PRL.
-
-##### `routingNumber: number | null`
-
-Gets or sets the routing number component of the PRL.
-
-##### `search: string`
-
-Gets or sets the search component of the PRL.
-
-##### `searchParams: URLSearchParams`
-
-Gets the URLSearchParams object.
-
-##### `split: [string, string, boolean] | null`
-
-Gets or sets the split component of the PRL.
-
-##### `username: string`
-
-Gets or sets the username component of the PRL.
-
-##### `value: number | null`
-
-Gets or sets the amount component of the PRL. This contrasts with the `amount` working only with the currency string and not the currency number itself.
-
-#### Methods
-
-##### `toString(): string`
-
-Returns the string representation of the PRL.
-
-##### `toJSON(): string`
-
-Returns the JSON representation of the PRL.
-
-##### `toJSONObject(): object`
-
-Returns the PRL as a JSON object with all non-empty values.
+Creates a new Payto instance from a payto URL string.
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `accountNumber` | `number \| null` | Account number (7-14 digits) |
+| `address` | `string \| null` | Payment address |
+| `amount` | `string \| null` | Payment amount with currency |
+| `asset` | `string \| null` | Asset type or contract address |
+| `barcode` | `'qr' \| 'pdf417' \| 'aztec' \| 'code128' \| null` | Barcode format |
+| `bic` | `string \| null` | Bank Identifier Code (8 or 11 characters) |
+| `colorBackground` | `string \| null` | Background color in hex format |
+| `colorForeground` | `string \| null` | Foreground color in hex format |
+| `currency` | `[string, string?, string?]` | Currency codes array |
+| `deadline` | `number \| null` | Payment deadline (Unix timestamp) |
+| `donate` | `boolean \| null` | Donation flag |
+| `fiat` | `string \| null` | Fiat currency code |
+| `hash` | `string` | URL hash component |
+| `host` | `string` | Complete host (hostname:port) |
+| `hostname` | `string` | Host without port |
+| `href` | `string` | Complete URL string |
+| `iban` | `string \| null` | International Bank Account Number |
+| `item` | `string \| null` | Item description (max 40 chars) |
+| `location` | `string \| null` | Location data (format depends on void type) |
+| `message` | `string \| null` | Payment message |
+| `network` | `string` | Network identifier |
+| `organization` | `string \| null` | Organization name (max 25 chars) |
+| `origin` | `string \| null` | URL origin |
+| `password` | `string` | URL password component |
+| `pathname` | `string` | URL path component |
+| `port` | `string` | URL port component |
+| `protocol` | `string` | URL protocol (always 'payto:') |
+| `receiverName` | `string \| null` | Receiver's name |
+| `recurring` | `string \| null` | Recurring payment details |
+| `route` | `string \| null` | Additional routing information |
+| `routingNumber` | `number \| null` | Bank routing number (9 digits) |
+| `search` | `string` | URL search component |
+| `searchParams` | `URLSearchParams` | URL search parameters |
+| `split` | `[string, string, boolean] \| null` | Payment split information |
+| `swap` | `string \| null` | Swap transaction details |
+| `username` | `string` | URL username component |
+| `value` | `number \| null` | Numeric amount value |
+| `void` | `string \| null` | Void path type (e.g., 'geo', 'plus') |
+
+### Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `toString()` | `string` | Returns the complete payto URL string |
+| `toJSON()` | `string` | Returns a JSON string representation |
+| `toJSONObject()` | `object` | Returns a plain object with all properties |
+
+## Type Safety
+
+The library includes TypeScript type definitions and runtime validation for:
+
+- Bank Identifier Codes (BIC)
+- Routing numbers (9 digits)
+- Account numbers (7-14 digits)
+- Geographic coordinates
+- Plus codes
+- Unix timestamps
+- Barcode formats
 
 ## License
 
@@ -242,8 +135,20 @@ This project is licensed under the CORE License - see the [LICENSE](LICENSE) fil
 
 ## Contributing
 
-Feel free to contribute to this project. You can open issues for feature requests or bug fixes. Pull requests are also welcome.
+Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ## Acknowledgments
 
-This library is based on the [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) API from MDN.
+- Based on the [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) Web API
+- Implements [RFC 8905](https://datatracker.ietf.org/doc/html/rfc8905) - The 'payto' URI Scheme
+
+## Funding
+
+If you find this project useful, please consider supporting it:
+
+- [GitHub Sponsors](https://github.com/sponsors/bchainhub)
+- [Core](https://blockindex.net/address/cb7147879011ea207df5b35a24ca6f0859dcfb145999)
+- [Bitcoin](https://www.blockchain.com/explorer/addresses/btc/bc1pd8guxjkr2p6n2kl388fdj2trete9w2fr89xlktdezmcctxvtzm8qsymg0d)
+- [Litecoin](https://www.blockchain.com/explorer/addresses/ltc/ltc1ql8dvx0wv0nh2vncpt9j3zqefaehsd25cwp7pfx)
+
+List of sponsors: [![GitHub Sponsors](https://img.shields.io/github/sponsors/bchainhub)](https://github.com/sponsors/bchainhub)

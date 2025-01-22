@@ -1,4 +1,4 @@
-name: Feature request 🔮
+name: Feature Request 🔮
 description: Suggest an idea for this project
 labels:
   - enhancement
@@ -6,13 +6,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        Suggest an idea for this project and developers will consider the integration.
+        Please provide details about your feature request. The development team will review and consider your suggestion.
 
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: Is your feature request related to a problem? Please describe.
+      description: What problem does your feature request aim to solve? Please describe.
     validations:
       required: true
 
@@ -20,7 +20,7 @@ body:
     id: solution
     attributes:
       label: Solution
-      description: Describe the solution you'd like.
+      description: Describe your proposed solution in detail.
     validations:
       required: true
 
@@ -28,16 +28,16 @@ body:
     id: alternatives
     attributes:
       label: Alternatives
-      description: Describe alternatives you've considered.
+      description: What alternative solutions have you considered?
 
   - type: textarea
     id: implementation
     attributes:
       label: Implementation
-      description: Describe implementation with example of the code.
+      description: Provide a code example of how this feature could be implemented.
 
   - type: textarea
     id: additional
     attributes:
-      label: Additional context
-      description: Please, place additional content or screenshots.
+      label: Additional Context
+      description: Add any other context, screenshots, or examples here.
