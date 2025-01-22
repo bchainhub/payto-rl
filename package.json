@@ -1,10 +1,12 @@
 {
   "name": "payto-rl",
-  "version": "1.0.4",
-  "description": "Payto resource locator",
+  "version": "1.0.5",
+  "description": "PayTo Resource Locator",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "private": false,
+  "sideEffects": false,
   "scripts": {
     "test": "npm run build && node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ./node_modules/uvu/bin.js test",
     "build": "tsc",
