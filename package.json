@@ -8,8 +8,8 @@
   "private": false,
   "sideEffects": false,
   "scripts": {
-    "test": "npm run build && node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ./node_modules/uvu/bin.js test",
-    "build": "tsc",
+    "test": "npm run build && node --no-deprecation --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ./node_modules/uvu/bin.js test",
+    "build": "tsc --declaration --declarationDir ./dist",
     "dev": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --inspect src/index.ts"
   },
   "repository": {
