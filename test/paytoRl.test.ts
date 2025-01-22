@@ -89,8 +89,12 @@ test('toJSONObject', () => {
 	assert.equal(jsonObject, {
 		address: 'cb7147879011ea207df5b35a24ca6f0859dcfb145999',
 		amount: 'ctn:10.01',
-		colorForeground: '001bee',
 		asset: 'ctn',
+		colorForeground: '001bee',
+		currency: [
+			"ctn",
+			"eur"
+		],
 		fiat: 'eur',
 		host: 'xcb',
 		hostname: 'xcb',
@@ -192,6 +196,40 @@ test('toJSONObject includes all properties', () => {
 	assert.ok(json.hasOwnProperty('colorForeground'));
 	assert.ok(json.hasOwnProperty('organization'));
 	assert.ok(json.hasOwnProperty('item'));
+});
+
+test('get and set account alias for UPI', () => {
+	const payto = new Payto('payto://upi/user@example.com');
+	assert.is(payto.accountAlias, 'user@example.com');
+	payto.accountAlias = 'newuser@example.com';
+	assert.is(payto.accountAlias, 'newuser@example.com');
+	assert.throws(() => {
+		payto.accountAlias = 'invalid-email';
+	}, /Invalid email address format/);
+});
+
+test('get and set account alias for PIX', () => {
+	const payto = new Payto('payto://pix/user@example.com');
+	assert.is(payto.accountAlias, 'user@example.com');
+	payto.accountAlias = 'newuser@example.com';
+	assert.is(payto.accountAlias, 'newuser@example.com');
+	payto.accountAlias = null;
+	assert.is(payto.accountAlias, null);
+});
+
+test('get and set account number for ACH', () => {
+	const payto = new Payto('payto://ach/123456789/1234567');
+	assert.is(payto.accountNumber, 1234567);
+	payto.accountNumber = 12345678;
+	assert.is(payto.accountNumber, 12345678);
+	assert.throws(() => {
+		payto.accountNumber = 123456; // Too short
+	}, /Invalid account number format/);
+	assert.throws(() => {
+		payto.accountNumber = 123456789012345; // Too long
+	}, /Invalid account number format/);
+	payto.accountNumber = null;
+	assert.is(payto.accountNumber, null);
 });
 
 test.run();
