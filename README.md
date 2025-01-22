@@ -37,6 +37,21 @@ payto.value = 20.02;
 console.log(payto.amount);   // 'ctn:20.02'
 console.log(payto.fiat);     // 'eur'
 
+// ACH payment examples
+const achPayto1 = new Payto('payto://ach/123456789/1234567'); // With routing number
+console.log(achPayto1.routingNumber); // 123456789
+console.log(achPayto1.accountNumber); // 1234567
+
+const achPayto2 = new Payto('payto://ach/1234567'); // Account number only
+console.log(achPayto2.accountNumber); // 1234567
+
+// UPI/PIX payment examples
+const upiPayto = new Payto('payto://upi/user@example.com');
+console.log(upiPayto.accountAlias); // 'user@example.com'
+
+const pixPayto = new Payto('payto://pix/user@example.com');
+console.log(pixPayto.accountAlias); // 'user@example.com'
+
 // Geo location example
 const geoPayto = new Payto('payto://void/geo');
 geoPayto.location = '51.5074,0.1278';  // Valid coordinates
@@ -70,7 +85,8 @@ Creates a new Payto instance from a payto URL string.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `accountNumber` | `number \| null` | Account number (7-14 digits) |
+| `accountAlias` | `string \| null` | Email address for UPI/PIX payments |
+| `accountNumber` | `number \| null` | Account number (7-14 digits) for ACH payments |
 | `address` | `string \| null` | Payment address |
 | `amount` | `string \| null` | Payment amount with currency |
 | `asset` | `string \| null` | Asset type or contract address |
@@ -124,10 +140,23 @@ The library includes TypeScript type definitions and runtime validation for:
 - Bank Identifier Codes (BIC)
 - Routing numbers (9 digits)
 - Account numbers (7-14 digits)
+- Email addresses (for UPI/PIX)
 - Geographic coordinates
 - Plus codes
 - Unix timestamps
 - Barcode formats
+
+## Payment System Support
+
+### ACH Payments
+Supports two formats:
+- `payto://ach/routing/account` (with routing number)
+- `payto://ach/account` (account number only)
+
+### UPI/PIX Payments
+Email-based payment identifiers:
+- `payto://upi/email@example.com`
+- `payto://pix/email@example.com`
 
 ## License
 
