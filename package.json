@@ -9,6 +9,7 @@
   "sideEffects": false,
   "scripts": {
     "test": "npm run build && node --no-deprecation --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ./node_modules/uvu/bin.js test",
+    "test:coverage": "c8 npm test",
     "build": "tsc --declaration --declarationDir ./dist",
     "dev": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --inspect src/index.ts"
   },
@@ -47,7 +48,8 @@
     ".": "./dist/index.js"
   },
   "devDependencies": {
-    "@types/node": "^22.10.7",
+    "@types/node": "^22.10.9",
+    "c8": "^9.1.0",
     "esm": "^3.2.25",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",

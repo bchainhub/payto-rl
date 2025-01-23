@@ -103,7 +103,8 @@ test('toJSONObject', () => {
 		pathname: '/cb7147879011ea207df5b35a24ca6f0859dcfb145999',
 		protocol: 'payto:',
 		search: '?amount=ctn:10.01&fiat=eur&color-f=001BEE',
-		value: 10.01
+		value: 10.01,
+        origin: "payto://xcb"
 	});
 });
 
@@ -249,6 +250,109 @@ test('get and set rtl', () => {
 	assert.is(payto.rtl, true);
 	payto.rtl = null;
 	assert.is(payto.rtl, null);
+});
+
+test('handle empty search params', () => {
+	const payto = new Payto('payto://xcb/address');
+	assert.is(payto.searchParams.toString(), '');
+});
+
+test('handle null values in currency', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.currency = [null, null];
+	assert.equal(payto.currency, [null, null]);
+});
+
+test('validate complex URL components', () => {
+	const payto = new Payto('payto://user:pass@test.com:8080/path?query=1#hash');
+	assert.is(payto.username, 'user');
+	assert.is(payto.password, 'pass');
+	assert.is(payto.port, '8080');
+	assert.is(payto.hash, '#hash');
+});
+
+test('handle setting URL components', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.username = 'user';
+	payto.password = 'pass';
+	payto.host = 'test.com:8080';
+	assert.is(payto.href, 'payto://user:pass@test.com:8080/address');
+});
+
+test('handle invalid amount formats', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.amount = 'invalid:amount';
+	assert.is(payto.value, null);
+});
+
+test('handle complex currency scenarios', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.currency = ['token', 'usd', 15.5];
+	assert.equal(payto.currency, ['token', 'usd']);
+	assert.is(payto.value, 15.5);
+	assert.is(payto.amount, 'token:15.5');
+});
+
+test('validate routing number format', () => {
+	const payto = new Payto('payto://ach/123456789/1234567');
+	assert.throws(() => {
+		payto.routingNumber = 12345678; // Invalid 8-digit number
+	}, /Invalid routing number format/);
+});
+
+test('handle complex JSON object conversion', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.colorBackground = 'ff0000';
+	payto.deadline = 1234567890;
+	payto.donate = true;
+	const json = payto.toJSONObject();
+	assert.ok(json.colorBackground === 'ff0000');
+	assert.ok(json.deadline === 1234567890);
+	assert.ok(json.donate === true);
+});
+
+test('handle edge cases in void type', () => {
+	const payto = new Payto('payto://void/custom');
+	payto.void = 'geo';
+	assert.is(payto.void, 'geo');
+	payto.void = null;
+	assert.is(payto.void, null);
+});
+
+test('validate organization name length', () => {
+	const payto = new Payto('payto://xcb/address');
+	const longName = 'This organization name is way too long and should be rejected';
+	payto.organization = longName;
+	assert.is(payto.organization, null);
+});
+
+test('handle complex split payment scenarios', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.split = ['receiver123', '50', true];
+	assert.equal(payto.split, ['receiver123', '50', true]);
+	payto.split = null;
+	assert.is(payto.split, null);
+});
+
+test('validate search params manipulation', () => {
+	const payto = new Payto('payto://xcb/address?custom=value');
+	assert.is(payto.searchParams.get('custom'), 'value');
+	payto.searchParams.set('new', 'param');
+	assert.is(payto.searchParams.get('new'), 'param');
+});
+
+test('handle origin for payto protocol', () => {
+	// Test with port
+	const paytoWithPort = new Payto('payto://user:pass@test.com:8080/path');
+	assert.is(paytoWithPort.origin, 'payto://test.com:8080');
+
+	// Test without port
+	const paytoNoPort = new Payto('payto://test.com/path');
+	assert.is(paytoNoPort.origin, 'payto://test.com');
+
+	// Test with subdomain
+	const paytoSubdomain = new Payto('payto://sub.test.com:8080/path');
+	assert.is(paytoSubdomain.origin, 'payto://sub.test.com:8080');
 });
 
 test.run();

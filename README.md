@@ -2,12 +2,31 @@
 
 `payto-rl` is a TypeScript library for handling Payto Resource Locators (PRLs). This library is based on the [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) API and provides additional functionality for managing PRLs.
 
+[![npm](https://img.shields.io/npm/v/payto-rl?label=npm&color=cb3837&logo=npm)](https://www.npmjs.com/package/payto-rl)
+[![License: CORE](https://img.shields.io/badge/License-CORE-yellow?logo=googledocs)](LICENSE)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/payto-rl?label=Size&logo=tsnode)](https://bundlephobia.com/package/payto-rl@latest)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/bchainhub?label=Sponsors&logo=githubsponsors&color=EA4AAA)](https://github.com/sponsors/bchainhub)
+
+## Features
+
+- 🐥 **Small**: **[![Bundle Size](https://img.shields.io/bundlephobia/minzip/payto-rl?label=&color=6ead0a)](https://bundlephobia.com/package/payto-rl@latest)** gzipped, distributed as minified ES modules.
+- 📜 **Standardized**: Based on the [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) Web API.
+- 🏗️ **Simple**: Easy to implement.
+- 🗂 **Typed**: Ships with types included.
+- 🧪 **Tested**: 100% test coverage.
+- 🌲 **Tree Shaking**: Zero dependencies, no side effects.
+
 ## Installation
 
-Install the `payto-rl` package using npm or yarn:
+Install the `payto-rl` package using your package manager:
 
 ```sh
 npm i payto-rl
+```
+
+```sh
+pnpm add payto-rl
 ```
 
 ```sh
@@ -213,4 +232,4 @@ If you find this project useful, please consider supporting it:
 - [Bitcoin](https://www.blockchain.com/explorer/addresses/btc/bc1pd8guxjkr2p6n2kl388fdj2trete9w2fr89xlktdezmcctxvtzm8qsymg0d)
 - [Litecoin](https://www.blockchain.com/explorer/addresses/ltc/ltc1ql8dvx0wv0nh2vncpt9j3zqefaehsd25cwp7pfx)
 
-List of sponsors: [![GitHub Sponsors](https://img.shields.io/github/sponsors/bchainhub)](https://github.com/sponsors/bchainhub)
+List of sponsors: [![GitHub Sponsors](https://img.shields.io/github/sponsors/bchainhub?label=Sponsors&logo=githubsponsors&color=EA4AAA)](https://github.com/sponsors/bchainhub)

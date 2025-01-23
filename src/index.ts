@@ -1,16 +1,6 @@
 export type PaytoJSON = {
 	[key: string]: any;
 	[key: number]: never;
-	port?: string;
-	host?: string;
-	hostname?: string;
-	href?: string;
-	origin?: string | null;
-	password?: string;
-	pathname?: string;
-	protocol?: string;
-	search?: string;
-	username?: string;
 	accountAlias?: string | null;
 	accountNumber?: number | null;
 	address?: string | null;
@@ -25,17 +15,27 @@ export type PaytoJSON = {
 	donate?: boolean | null;
 	fiat?: string | null;
 	hash?: string;
+	host?: string;
+	hostname?: string;
+	href?: string;
 	iban?: string | null;
 	item?: string | null;
 	location?: string | null;
 	message?: string | null;
 	network?: string;
 	organization?: string | null;
+	origin?: string | null;
+	password?: string;
+	pathname?: string;
+	port?: string;
+	protocol?: string;
 	receiverName?: string | null;
 	recurring?: string | null;
 	routingNumber?: number | null;
 	rtl?: boolean | null;
+	search?: string;
 	split?: [string, string, boolean] | null;
+	username?: string;
 	value?: number | null;
 	void?: string | null;
 };
@@ -282,9 +282,9 @@ class Payto {
 		return this.searchParams.get('color-f')?.toLowerCase() || null;
 	}
 
-	/** 
+	/**
 	 * Sets foreground color in hex format
-	 * @throws Error if color format invalid 
+	 * @throws Error if color format invalid
 	 */
 	set colorForeground(value: string | null) {
 		if (value && /[0-9a-fA-F]{6}/.test(value)) {
@@ -592,11 +592,13 @@ class Payto {
 
 	/**
 	 * Gets URL origin
+	 * Simulates standard URL origin behavior for payto protocol
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/origin
 	 */
-	get origin(): string | null {
-		const origin = this.url.origin;
-		return origin === 'null' || origin === '' ? null : origin;
+	get origin(): string {
+		// Reconstruct origin format: protocol//hostname[:port]
+		const port = this.port ? `:${this.port}` : '';
+		return `payto://${this.hostname}${port}`;
 	}
 
 	/**
