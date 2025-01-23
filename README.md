@@ -120,8 +120,8 @@ Creates a new Payto instance from a payto URL string.
 | `protocol` | `string` | URL protocol (always 'payto:') |
 | `receiverName` | `string \| null` | Receiver's name |
 | `recurring` | `string \| null` | Recurring payment details |
-| `route` | `string \| null` | Additional routing information |
 | `routingNumber` | `number \| null` | Bank routing number (9 digits) |
+| `rtl` | `boolean \| null` | right-to-left layout |
 | `search` | `string` | URL search component |
 | `searchParams` | `URLSearchParams` | URL search parameters |
 | `split` | `[string, string, boolean] \| null` | Payment split information |
@@ -153,6 +153,13 @@ The library includes TypeScript type definitions and runtime validation for:
 - IBAN format
 
 ## Payment System Support
+
+### IBAN
+
+Supports two formats:
+
+- `payto://iban/iban` (without BIC)
+- `payto://iban/bic/iban` (with BIC)
 
 ### ACH Payments
 

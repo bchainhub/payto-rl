@@ -33,8 +33,8 @@ export type PaytoJSON = {
 	organization?: string | null;
 	receiverName?: string | null;
 	recurring?: string | null;
-	route?: string | null;
 	routingNumber?: number | null;
+	rtl?: boolean | null;
 	split?: [string, string, boolean] | null;
 	value?: number | null;
 	void?: string | null;
@@ -52,6 +52,11 @@ class Payto {
 
 	private url: URL;
 
+	/**
+	 * @description Constructor for the Payto class
+	 * @param paytoString: string
+	 * @returns void
+	 */
 	constructor(paytoString: string) {
 		this.url = new URL(paytoString);
 		if (this.url.protocol !== 'payto:') {
@@ -59,14 +64,39 @@ class Payto {
 		}
 	}
 
-	private getHostnameParts(array: string[], type: string | null, position: number = 2): string | null {
-		if (type === null || array[1]?.toLowerCase() === type) {
+	/**
+	 * @description Get the hostname and pathname (hostpath) parts
+	 * @param type: string | undefined
+	 * @param position: number = 1
+	 * @returns string | null
+	 */
+	private getHostpathParts(type?: string, position = 1): string | null {
+		const hostnamePlusPath = this.hostname + this.url.pathname;
+		const array = hostnamePlusPath.split('/');
+		if (!type || array[0]?.toLowerCase() === type) {
 			return array[position] || null;
 		}
 		return null;
 	}
 
-	private setHostnameParts(value: string | null, position: number = 2): void {
+	/**
+	 * @description Get the pathname parts
+	 * @param position: number = 1
+	 * @returns string | null
+	 */
+	private getPathParts(position = 1): string | null {
+		const path = this.url.pathname;
+		const array = path.split('/');
+		return array[position] || null;
+	}
+
+	/**
+	 * @description Set the pathname parts
+	 * @param value: string | null
+	 * @param position: number = 1
+	 * @returns void
+	 */
+	private setPathParts(value: string | null, position = 1): void {
 		const addressArray = this.pathname.split('/');
 		if (value) {
 			addressArray[position] = value;
@@ -78,7 +108,7 @@ class Payto {
 
 	get accountAlias(): string | null {
 		if (this.hostname === 'upi' || this.hostname === 'pix') {
-			const alias = this.getHostnameParts(this.pathname.split('/'), null, 1);
+			const alias = this.getPathParts();
 			if (alias && Payto.EMAIL_REGEX.test(alias)) {
 				return alias;
 			}
@@ -91,15 +121,15 @@ class Payto {
 			if (!Payto.EMAIL_REGEX.test(value)) {
 				throw new Error('Invalid email address format');
 			}
-			this.setHostnameParts(value, 1);
+			this.setPathParts(value);
 		} else {
-			this.setHostnameParts(null, 1);
+			this.setPathParts(null);
 		}
 	}
 
 	get accountNumber(): number | null {
 		if (this.hostname === 'ach') {
-			const parts = this.pathname.split('/').filter(part => part);
+			const parts = this.pathname.split('/');
 			const accountStr = parts.length > 2 ? parts[2] : parts[1];
 			if (accountStr && Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
 				return parseInt(accountStr, 10);
@@ -110,7 +140,7 @@ class Payto {
 
 	set accountNumber(value: number | null) {
 		if (!this.hostname || this.hostname !== 'ach') {
-			return;
+			throw new Error('Invalid hostname, must be ach');
 		}
 
 		if (value !== null) {
@@ -120,19 +150,25 @@ class Payto {
 			}
 		}
 
-		const parts = this.pathname.split('/').filter(part => part);
-		const hasRouting = parts.length > 1 && Payto.ROUTING_NUMBER_REGEX.test(parts[1]);
-		const position = hasRouting ? 3 : 2;
-
-		this.setHostnameParts(value?.toString() ?? null, position);
+		const parts = this.pathname.split('/');
+		if (parts.length > 2) {
+			if (!value) {
+				this.setPathParts(null, 2);
+				this.setPathParts(null, 1);
+			} else {
+				this.setPathParts(value?.toString() ?? null, 2);
+			}
+		} else if (parts.length > 1) {
+			this.setPathParts(value?.toString() ?? null, 1);
+		}
 	}
 
 	get address(): string | null {
-		return this.getHostnameParts(this.pathname.split('/'), null, 1);
+		return this.getPathParts();
 	}
 
 	set address(value: string | null) {
-		this.setHostnameParts(value, 1);
+		this.setPathParts(value);
 	}
 
 	get amount(): string | null {
@@ -172,15 +208,36 @@ class Payto {
 	}
 
 	get bic(): string | null {
-		const bicStr = this.getHostnameParts(this.pathname.split('/'), 'bic', 2)?.toUpperCase();
-		return bicStr as string | null;
+		if (this.hostname === 'bic') {
+			return this.getHostpathParts('bic', 1)?.toUpperCase() ?? null;
+		} else if (this.hostname === 'iban') {
+			if (this.pathname.length > 2) {
+				// BIC is the first part or not present
+				return this.getHostpathParts('iban', 1)?.toUpperCase() ?? null;
+			}
+		}
+		return null;
 	}
 
 	set bic(value: string | null) {
 		if (value && !Payto.BIC_REGEX.test(value)) {
 			throw new Error('Invalid BIC format');
 		}
-		this.setHostnameParts(value?.toUpperCase() ?? null, 2);
+		if (this.hostname === 'bic') {
+			this.setPathParts(value?.toUpperCase() ?? null, 1);
+		} else if (this.hostname === 'iban') {
+			if (this.pathname.length > 2) {
+				this.setPathParts(value?.toUpperCase() ?? null, 1);
+			} else if (this.pathname.length > 1) {
+				const ibanStr = this.getHostpathParts('iban', 1);
+				if (ibanStr) {
+					this.setPathParts(ibanStr, 2);
+					this.setPathParts(value?.toUpperCase() ?? null, 1);
+				} else {
+					this.setPathParts(value?.toUpperCase() ?? null, 1);
+				}
+			}
+		}
 	}
 
 	get colorBackground(): string | null {
@@ -275,8 +332,8 @@ class Payto {
 	}
 
 	set donate(value: boolean | null) {
-		if (value === true || value === false) {
-			this.searchParams.set('donate', value ? '1' : '0');
+		if (value === true) {
+			this.searchParams.set('donate', '1');
 		} else {
 			this.searchParams.delete('donate');
 		}
@@ -351,19 +408,36 @@ class Payto {
 	}
 
 	get iban(): string | null {
-		const ibanStr = this.getHostnameParts(this.pathname.split('/'), 'iban', 2);
-		return ibanStr && Payto.IBAN_REGEX.test(ibanStr) ? ibanStr.toUpperCase() : null;
+		if (this.hostname === 'iban') {
+			const parts = this.pathname.split('/');
+			const ibanStr = parts.length > 2 ? parts[2] : parts[1];
+			return ibanStr && Payto.IBAN_REGEX.test(ibanStr) ? ibanStr.toUpperCase() : null;
+		}
+		return null;
 	}
 
 	set iban(value: string | null) {
 		if (value && !Payto.IBAN_REGEX.test(value)) {
 			throw new Error('Invalid IBAN format');
 		}
-		this.setHostnameParts(value?.toUpperCase() ?? null, 2);
+		if (this.hostname === 'iban') {
+			const parts = this.pathname.split('/');
+			if (parts.length > 2) {
+				if (!value) {
+					this.setPathParts(null, 2);
+					this.setPathParts(null, 1);
+				} else {
+					this.setPathParts(value?.toUpperCase() ?? null, 2);
+				}
+			} else if (parts.length > 1) {
+				this.setPathParts(value?.toUpperCase() ?? null, 1);
+			}
+		}
 	}
 
 	get item(): string | null {
-		return this.searchParams.get('item');
+		const item = this.searchParams.get('item');
+		return item && item.length <= 40 ? item : null;
 	}
 
 	set item(value: string | null) {
@@ -537,27 +611,51 @@ class Payto {
 		}
 	}
 
-	get route(): string | null {
-		return this.getHostnameParts(this.pathname.split('/'), null, 3);
-	}
-
-	set route(value: string | null) {
-		this.setHostnameParts(value, 3);
-	}
-
 	get routingNumber(): number | null {
-		const routingNumberStr = this.getHostnameParts(this.pathname.split('/'), 'ach', 2);
-		return routingNumberStr !== null ? parseInt(routingNumberStr, 10) : null;
+		if (this.hostname === 'ach') {
+			if (this.pathname.length > 2) {
+				// Routing number is the first part or not present
+				const routingNumberStr = this.getHostpathParts('ach', 1) ?? '';
+				return Payto.ROUTING_NUMBER_REGEX.test(routingNumberStr) ? parseInt(routingNumberStr, 10) : null;
+			}
+			return null;
+		}
+		return null;
 	}
 
 	set routingNumber(value: number | null) {
-		if (value !== null && !Payto.ROUTING_NUMBER_REGEX.test(value.toString())) {
+		if (value && !Payto.ROUTING_NUMBER_REGEX.test(value.toString())) {
 			throw new Error('Invalid routing number format. Must be exactly 9 digits.');
 		}
-		const routingNumberStr = value !== null ? value.toString() : null;
-		this.setHostnameParts(routingNumberStr, 2);
+		if (this.pathname.length > 2) {
+			this.setPathParts(value?.toString() ?? null, 1);
+		} else if (this.pathname.length > 1) {
+			const accountNumberStr = this.getHostpathParts('ach', 1);
+			if (accountNumberStr) {
+				this.setPathParts(accountNumberStr, 2);
+				this.setPathParts(value?.toString() ?? null, 1);
+			} else {
+				this.setPathParts(value?.toString() ?? null, 1);
+			}
+		}
 	}
 
+
+	get rtl(): boolean | null {
+		if (this.searchParams.has('rtl')) {
+			const rtlValue = this.searchParams.get('rtl');
+			return rtlValue !== null ? (rtlValue === '1' ? true : (rtlValue === '0' ? false : null)) : null;
+		}
+		return null;
+	}
+
+	set rtl(value: boolean | null) {
+		if (value === true) {
+			this.searchParams.set('rtl', '1');
+		} else {
+			this.searchParams.delete('rtl');
+		}
+	}
 	/**
 	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/search
 	 */
@@ -729,7 +827,7 @@ class Payto {
 		if (this.colorForeground) obj.colorForeground = this.colorForeground;
 		if (this.currency[0] || this.currency[1]) obj.currency = this.currency;
 		if (this.deadline) obj.deadline = this.deadline;
-		if (this.donate !== null) obj.donate = this.donate;
+		if (this.donate) obj.donate = this.donate;
 		if (this.fiat) obj.fiat = this.fiat;
 		if (this.hash) obj.hash = this.hash;
 		if (this.iban) obj.iban = this.iban;
@@ -740,8 +838,8 @@ class Payto {
 		if (this.organization) obj.organization = this.organization;
 		if (this.receiverName) obj.receiverName = this.receiverName;
 		if (this.recurring) obj.recurring = this.recurring;
-		if (this.route) obj.route = this.route;
 		if (this.routingNumber) obj.routingNumber = this.routingNumber;
+		if (this.rtl) obj.rtl = this.rtl;
 		if (this.split) obj.split = this.split;
 		if (this.value !== null) obj.value = this.value;
 		if (this.void) obj.void = this.void;

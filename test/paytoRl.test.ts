@@ -60,7 +60,7 @@ test('get and set donate', () => {
 	const payto = new Payto('payto://btc/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?donate=1');
 	assert.is(payto.donate, true);
 	payto.donate = false;
-	assert.is(payto.donate, false);
+	assert.is(payto.donate, null); // Should be null because donate is not set
 	payto.donate = null;
 	assert.is(payto.donate, null);
 });
@@ -230,6 +230,25 @@ test('get and set account number for ACH', () => {
 	}, /Invalid account number format/);
 	payto.accountNumber = null;
 	assert.is(payto.accountNumber, null);
+});
+
+test('get and set IBAN', () => {
+	const payto = new Payto('payto://iban/ABC');
+	payto.iban = 'DE89370400440532013000';
+	assert.is(payto.iban, 'DE89370400440532013000');
+	payto.iban = null;
+	assert.is(payto.iban, null);
+	assert.throws(() => {
+		payto.iban = 'XXX';
+	}, /Invalid IBAN format/);
+});
+
+test('get and set rtl', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.rtl = true;
+	assert.is(payto.rtl, true);
+	payto.rtl = null;
+	assert.is(payto.rtl, null);
 });
 
 test.run();

@@ -1,6 +1,6 @@
 {
   "name": "payto-rl",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "PayTo Resource Locator",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
