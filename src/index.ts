@@ -1,6 +1,4 @@
 export type PaytoJSON = {
-	[key: string]: any;
-	[key: number]: never;
 	accountAlias?: string | null;
 	accountNumber?: number | null;
 	address?: string | null;

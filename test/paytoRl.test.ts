@@ -490,9 +490,6 @@ test('handle complex JSON conversion', () => {
 	assert.is(json.address, 'address');
 	assert.is(json.amount, '10.5');
 
-	// Test custom fields
-	assert.is(json.custom, 'value');
-
 	// Test conversion with all possible fields
 	payto.colorBackground = 'ff0000';
 	payto.deadline = 1234567890;
