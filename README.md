@@ -37,6 +37,11 @@ payto.value = 20.02;
 console.log(payto.amount);   // 'ctn:20.02'
 console.log(payto.fiat);     // 'eur'
 
+// Color customization
+payto.colorBackground = 'ff0000';  // Red background (6-character hex)
+payto.colorForeground = '000000';  // Black foreground
+console.log(payto.colorBackground); // 'ff0000'
+
 // ACH payment examples
 const achPayto1 = new Payto('payto://ach/123456789/1234567'); // With routing number
 console.log(achPayto1.routingNumber); // 123456789
@@ -45,11 +50,11 @@ console.log(achPayto1.accountNumber); // 1234567
 const achPayto2 = new Payto('payto://ach/1234567'); // Account number only
 console.log(achPayto2.accountNumber); // 1234567
 
-// UPI/PIX payment examples
-const upiPayto = new Payto('payto://upi/user@example.com');
+// UPI/PIX payment examples (case-insensitive email)
+const upiPayto = new Payto('payto://upi/USER@example.com');
 console.log(upiPayto.accountAlias); // 'user@example.com'
 
-const pixPayto = new Payto('payto://pix/user@example.com');
+const pixPayto = new Payto('payto://pix/user@EXAMPLE.com');
 console.log(pixPayto.accountAlias); // 'user@example.com'
 
 // Geo location example
@@ -64,11 +69,21 @@ plusPayto.location = '8FVC9G8V+R9';  // Valid plus code
 console.log(plusPayto.void);     // 'plus'
 console.log(plusPayto.location); // '8FVC9G8V+R9'
 
-// Bank details example
-const bankPayto = new Payto('payto://bic/DEUTDEFF500');
+// Bank details example (case-insensitive BIC)
+const bankPayto = new Payto('payto://bic/deutdeff500');
 console.log(bankPayto.bic);           // 'DEUTDEFF500'
 bankPayto.routingNumber = 123456789;  // Valid 9-digit routing number
 console.log(bankPayto.routingNumber); // 123456789
+
+// Value handling examples
+const numericPayto = new Payto('payto://example/address?amount=10.5');
+console.log(numericPayto.value);  // 10.5
+console.log(numericPayto.amount); // '10.5'
+
+const tokenPayto = new Payto('payto://example/address?amount=token:10.5');
+console.log(tokenPayto.value);    // 10.5
+console.log(tokenPayto.amount);   // 'token:10.5'
+console.log(tokenPayto.asset);    // 'token'
 
 // Convert to JSON object
 const jsonObj = payto.toJSONObject();
@@ -90,28 +105,28 @@ Creates a new Payto instance from a payto URL string.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `accountAlias` | `string \| null` | Email address for UPI/PIX payments |
+| `accountAlias` | `string \| null` | Email address for UPI/PIX payments (case-insensitive) |
 | `accountNumber` | `number \| null` | Account number (7-14 digits) for ACH payments |
 | `address` | `string \| null` | Payment address |
-| `amount` | `string \| null` | Payment amount with currency |
+| `amount` | `string \| null` | Payment amount with optional currency prefix |
 | `asset` | `string \| null` | Asset type or contract address |
 | `barcode` | `'qr' \| 'pdf417' \| 'aztec' \| 'code128' \| null` | Barcode format |
-| `bic` | `string \| null` | Bank Identifier Code (8 or 11 characters) |
-| `colorBackground` | `string \| null` | Background color in hex format |
-| `colorForeground` | `string \| null` | Foreground color in hex format |
-| `currency` | `[string \| null, string \| null]` | Currency codes array |
+| `bic` | `string \| null` | Bank Identifier Code (8 or 11 characters, case-insensitive) |
+| `colorBackground` | `string \| null` | Background color in 6-character hex format |
+| `colorForeground` | `string \| null` | Foreground color in 6-character hex format |
+| `currency` | `[string \| null, string \| null]` | Currency codes array [asset, fiat] |
 | `deadline` | `number \| null` | Payment deadline (Unix timestamp) |
 | `donate` | `boolean \| null` | Donation flag |
-| `fiat` | `string \| null` | Fiat currency code |
+| `fiat` | `string \| null` | Fiat currency code (case-insensitive) |
 | `hash` | `string` | URL hash component |
 | `host` | `string` | Complete host (hostname:port) |
-| `hostname` | `string` | Host without port |
+| `hostname` | `string` | Host without port (case-insensitive) |
 | `href` | `string` | Complete URL string |
-| `iban` | `string \| null` | International Bank Account Number |
+| `iban` | `string \| null` | International Bank Account Number (case-insensitive) |
 | `item` | `string \| null` | Item description (max 40 chars) |
 | `location` | `string \| null` | Location data (format depends on void type) |
 | `message` | `string \| null` | Payment message |
-| `network` | `string` | Network identifier |
+| `network` | `string` | Network identifier (case-insensitive) |
 | `organization` | `string \| null` | Organization name (max 25 chars) |
 | `origin` | `string \| null` | URL origin |
 | `password` | `string` | URL password component |
@@ -127,7 +142,7 @@ Creates a new Payto instance from a payto URL string.
 | `split` | `[string, string, boolean] \| null` | Payment split information |
 | `swap` | `string \| null` | Swap transaction details |
 | `username` | `string` | URL username component |
-| `value` | `number \| null` | Numeric amount value |
+| `value` | `number \| null` | Numeric amount value (extracted from both simple and token:amount formats) |
 | `void` | `string \| null` | Void path type (e.g., 'geo', 'plus') |
 
 ### Methods
@@ -142,21 +157,22 @@ Creates a new Payto instance from a payto URL string.
 
 The library includes TypeScript type definitions and runtime validation for:
 
-- Bank Identifier Codes (BIC)
+- Bank Identifier Codes (BIC) - 8 or 11 characters, case-insensitive
 - Routing numbers (9 digits)
 - Account numbers (7-14 digits)
-- Email addresses (for UPI/PIX)
+- Email addresses (for UPI/PIX, case-insensitive)
 - Geographic coordinates
 - Plus codes
 - Unix timestamps
 - Barcode formats
-- IBAN format
+- IBAN format (case-insensitive)
+- Color formats (6-character hex)
 
 ## Payment System Support
 
 ### IBAN
 
-Supports two formats:
+Supports two formats (case-insensitive):
 
 - `payto://iban/iban` (without BIC)
 - `payto://iban/bic/iban` (with BIC)
@@ -170,7 +186,7 @@ Supports two formats:
 
 ### UPI/PIX Payments
 
-Email-based payment identifiers:
+Email-based payment identifiers (case-insensitive):
 
 - `payto://upi/email@example.com`
 - `payto://pix/email@example.com`

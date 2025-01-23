@@ -41,22 +41,34 @@ export type PaytoJSON = {
 };
 
 class Payto {
+	/** Validates account numbers (7-14 digits) */
 	private static readonly ACCOUNT_NUMBER_REGEX = /^(\d{7,14})$/;
+
+	/** Validates BIC/SWIFT/ORIC codes */
 	private static readonly BIC_REGEX = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/i;
+
+	/** Validates email addresses */
 	private static readonly EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+	/** Validates geographic coordinates */
 	private static readonly GEO_LOCATION_REGEX = /^(\+|-)?(?:90(?:\.0{1,6})?|(?:[0-9]|[1-8][0-9])(?:\.[0-9]{1,6})?),(\+|-)?(?:180(?:\.0{1,6})?|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:\.[0-9]{1,6})?)$/;
+
+	/** Validates IBAN */
 	private static readonly IBAN_REGEX = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{12,30}$/i;
+
+	/** Validates Plus codes */
 	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
+
+	/** Validates routing numbers (9 digits) */
 	private static readonly ROUTING_NUMBER_REGEX = /^(\d{9})$/;
+
+	/** Validates Unix timestamps */
 	private static readonly UNIX_TIMESTAMP_REGEX = /^\d+$/;
 
+	/** Internal URL object */
 	private url: URL;
 
-	/**
-	 * @description Constructor for the Payto class
-	 * @param paytoString: string
-	 * @returns void
-	 */
+	/** Creates a new Payto instance from a payto URL string */
 	constructor(paytoString: string) {
 		this.url = new URL(paytoString);
 		if (this.url.protocol !== 'payto:') {
@@ -64,12 +76,7 @@ class Payto {
 		}
 	}
 
-	/**
-	 * @description Get the hostname and pathname (hostpath) parts
-	 * @param type: string | undefined
-	 * @param position: number = 1
-	 * @returns string | null
-	 */
+	/** Extracts parts from combined hostname and pathname */
 	private getHostpathParts(type?: string, position = 1): string | null {
 		const hostnamePlusPath = this.hostname + this.url.pathname;
 		const array = hostnamePlusPath.split('/');
@@ -79,23 +86,14 @@ class Payto {
 		return null;
 	}
 
-	/**
-	 * @description Get the pathname parts
-	 * @param position: number = 1
-	 * @returns string | null
-	 */
+	/** Extracts parts from pathname */
 	private getPathParts(position = 1): string | null {
 		const path = this.url.pathname;
 		const array = path.split('/');
 		return array[position] || null;
 	}
 
-	/**
-	 * @description Set the pathname parts
-	 * @param value: string | null
-	 * @param position: number = 1
-	 * @returns void
-	 */
+	/** Updates parts in pathname */
 	private setPathParts(value: string | null, position = 1): void {
 		const addressArray = this.pathname.split('/');
 		if (value) {
@@ -106,6 +104,7 @@ class Payto {
 		this.pathname = '/' + addressArray.filter(part => part).join('/');
 	}
 
+	/** Gets email alias for UPI/PIX payments */
 	get accountAlias(): string | null {
 		if (this.hostname === 'upi' || this.hostname === 'pix') {
 			const alias = this.getPathParts();
@@ -116,6 +115,10 @@ class Payto {
 		return null;
 	}
 
+	/**
+	 * Sets email alias for UPI/PIX payments
+	 * @throws Error if email format is invalid 
+	 */
 	set accountAlias(value: string | null) {
 		if (value) {
 			if (!Payto.EMAIL_REGEX.test(value)) {
@@ -127,6 +130,7 @@ class Payto {
 		}
 	}
 
+	/** Gets account number for ACH payments */
 	get accountNumber(): number | null {
 		if (this.hostname === 'ach') {
 			const parts = this.pathname.split('/');
@@ -138,6 +142,10 @@ class Payto {
 		return null;
 	}
 
+	/**
+	 * Sets account number for ACH payments
+	 * @throws Error if format invalid or wrong hostname 
+	 */
 	set accountNumber(value: number | null) {
 		if (!this.hostname || this.hostname !== 'ach') {
 			throw new Error('Invalid hostname, must be ach');
@@ -163,42 +171,50 @@ class Payto {
 		}
 	}
 
+	/** Gets payment address */
 	get address(): string | null {
 		return this.getPathParts();
 	}
 
+	/** Sets payment address */
 	set address(value: string | null) {
 		this.setPathParts(value);
 	}
 
+	/** Gets payment amount */
 	get amount(): string | null {
 		return this.searchParams.get('amount');
 	}
 
+	/** Sets payment amount */
 	set amount(value: string | null) {
 		if (value) {
-			this.searchParams.set('amount', value.toString());
+			this.searchParams.set('amount', value);
 		} else {
 			this.searchParams.delete('amount');
 		}
 	}
 
+	/** Gets asset type from currency */
 	get asset(): string | null {
 		return this.currency[0];
 	}
 
+	/** Sets asset type in currency */
 	set asset(value: string | null) {
 		if (value === null) {
-			this.currency = [null, null, null];
+			this.currency = [null, null];
 		} else {
-			this.currency = [value, null, null];
+			this.currency = [value, null];
 		}
 	}
 
+	/** Gets barcode format */
 	get barcode(): string | null {
 		return this.searchParams.get('barcode')?.toLowerCase() || null;
 	}
 
+	/** Sets barcode format */
 	set barcode(value: string | null) {
 		if (value) {
 			this.searchParams.set('barcode', value);
@@ -207,18 +223,22 @@ class Payto {
 		}
 	}
 
+	/** Gets BIC/SWIFT code from BIC or IBAN path */
 	get bic(): string | null {
 		if (this.hostname === 'bic') {
 			return this.getHostpathParts('bic', 1)?.toUpperCase() ?? null;
 		} else if (this.hostname === 'iban') {
 			if (this.pathname.length > 2) {
-				// BIC is the first part or not present
 				return this.getHostpathParts('iban', 1)?.toUpperCase() ?? null;
 			}
 		}
 		return null;
 	}
 
+	/**
+	 * Sets BIC/SWIFT code
+	 * @throws Error if BIC format invalid
+	 */
 	set bic(value: string | null) {
 		if (value && !Payto.BIC_REGEX.test(value)) {
 			throw new Error('Invalid BIC format');
@@ -240,10 +260,15 @@ class Payto {
 		}
 	}
 
+	/** Gets background color in hex format */
 	get colorBackground(): string | null {
 		return this.searchParams.get('color-b')?.toLowerCase() || null;
 	}
 
+	/**
+	 * Sets background color in hex format
+	 * @throws Error if color format invalid
+	 */
 	set colorBackground(value: string | null) {
 		if (value && /[0-9a-fA-F]{6}/.test(value)) {
 			this.searchParams.set('color-b', value.toLowerCase());
@@ -252,10 +277,15 @@ class Payto {
 		}
 	}
 
+	/** Gets foreground color in hex format */
 	get colorForeground(): string | null {
 		return this.searchParams.get('color-f')?.toLowerCase() || null;
 	}
 
+	/** 
+	 * Sets foreground color in hex format
+	 * @throws Error if color format invalid 
+	 */
 	set colorForeground(value: string | null) {
 		if (value && /[0-9a-fA-F]{6}/.test(value)) {
 			this.searchParams.set('color-f', value.toLowerCase());
@@ -264,6 +294,7 @@ class Payto {
 		}
 	}
 
+	/** Gets currency as [asset, fiat] tuple */
 	get currency(): [string | null, string | null] {
 		const result: [string | null, string | null] = [null, null];
 		const amountValue = this.searchParams.get('amount');
@@ -280,6 +311,7 @@ class Payto {
 		return result;
 	}
 
+	/** Sets currency from [token, fiat, amount] array */
 	set currency(value: Array<string | number | null | undefined>) {
 		const [token, fiat, amount] = value;
 		const amountValue = this.searchParams.get('amount');
@@ -303,6 +335,7 @@ class Payto {
 		}
 	}
 
+	/** Gets payment deadline as Unix timestamp */
 	get deadline(): number | null {
 		const dl = this.searchParams.get('dl');
 		if (dl !== null && Payto.UNIX_TIMESTAMP_REGEX.test(dl)) {
@@ -312,6 +345,10 @@ class Payto {
 		return null;
 	}
 
+	/**
+	 * Sets payment deadline as Unix timestamp
+	 * @throws Error if deadline format invalid
+	 */
 	set deadline(value: number | null) {
 		if (value !== null) {
 			if (!Number.isInteger(value) || value < 0 || !Payto.UNIX_TIMESTAMP_REGEX.test(value.toString())) {
@@ -323,6 +360,7 @@ class Payto {
 		}
 	}
 
+	/** Gets donation flag */
 	get donate(): boolean | null {
 		if (this.searchParams.has('donate')) {
 			const donateValue = this.searchParams.get('donate');
@@ -331,6 +369,7 @@ class Payto {
 		return null;
 	}
 
+	/** Sets donation flag */
 	set donate(value: boolean | null) {
 		if (value === true) {
 			this.searchParams.set('donate', '1');
@@ -339,10 +378,12 @@ class Payto {
 		}
 	}
 
+	/** Gets fiat currency code */
 	get fiat(): string | null {
 		return this.searchParams.get('fiat')?.toLowerCase() || null;
 	}
 
+	/** Sets fiat currency code */
 	set fiat(value: string | null) {
 		if (value) {
 			this.searchParams.set('fiat', value);
@@ -352,61 +393,70 @@ class Payto {
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
+	 * Gets URL hash
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
 	 */
 	get hash(): string {
 		return this.url.hash;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
+	 * Sets URL hash
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
 	 */
 	set hash(value: string) {
 		this.url.hash = value;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/host
+	 * Gets URL host
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/host
 	 */
 	get host(): string {
 		return this.url.host;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/host
+	 * Sets URL host
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/host
 	 */
 	set host(value: string) {
 		this.url.host = value;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/hostname
+	 * Gets URL hostname
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/hostname
 	 */
 	get hostname(): string {
 		return this.url.hostname.toLowerCase();
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/hostname
+	 * Sets URL hostname
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/hostname
 	 */
 	set hostname(value: string) {
 		this.url.hostname = value.toLowerCase();
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/href
+	 * Gets URL href
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/href
 	 */
 	get href(): string {
 		return this.url.href;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/href
+	 * Sets URL href
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/href
 	 */
 	set href(value: string) {
 		this.url.href = value;
 	}
 
+	/** Gets IBAN from path */
 	get iban(): string | null {
 		if (this.hostname === 'iban') {
 			const parts = this.pathname.split('/');
@@ -416,6 +466,10 @@ class Payto {
 		return null;
 	}
 
+	/**
+	 * Sets IBAN in path
+	 * @throws Error if IBAN format invalid
+	 */
 	set iban(value: string | null) {
 		if (value && !Payto.IBAN_REGEX.test(value)) {
 			throw new Error('Invalid IBAN format');
@@ -435,11 +489,13 @@ class Payto {
 		}
 	}
 
+	/** Gets item description (max 40 chars) */
 	get item(): string | null {
 		const item = this.searchParams.get('item');
 		return item && item.length <= 40 ? item : null;
 	}
 
+	/** Sets item description (max 40 chars) */
 	set item(value: string | null) {
 		if (value !== null && value.length <= 40) {
 			this.searchParams.set('item', value);
@@ -448,6 +504,7 @@ class Payto {
 		}
 	}
 
+	/** Gets location based on void type (geo or plus code) */
 	get location(): string | null {
 		const voidType = this.void;
 		if (!voidType) {
@@ -467,6 +524,10 @@ class Payto {
 		return value;
 	}
 
+	/**
+	 * Sets location value
+	 * @throws Error if void type not set or location format invalid
+	 */
 	set location(value: string | null) {
 		if (value === null) {
 			this.searchParams.delete('loc');
@@ -491,10 +552,12 @@ class Payto {
 		this.searchParams.set('loc', value.toString());
 	}
 
+	/** Gets payment message */
 	get message(): string | null {
 		return this.searchParams.get('message');
 	}
 
+	/** Sets payment message */
 	set message(value: string | null) {
 		if (value) {
 			this.searchParams.set('message', value);
@@ -503,18 +566,22 @@ class Payto {
 		}
 	}
 
+	/** Gets payment network */
 	get network(): string {
 		return this.url.hostname.toLowerCase();
 	}
 
+	/** Sets payment network */
 	set network(value: string) {
 		this.url.hostname = value.toLowerCase();
 	}
 
+	/** Gets organization name (max 25 chars) */
 	get organization(): string | null {
 		return this.searchParams.get('org');
 	}
 
+	/** Sets organization name (max 25 chars) */
 	set organization(value: string | null) {
 		if (value !== null && value.length <= 25) {
 			this.searchParams.set('org', value);
@@ -524,7 +591,8 @@ class Payto {
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/origin
+	 * Gets URL origin
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/origin
 	 */
 	get origin(): string | null {
 		const origin = this.url.origin;
@@ -532,65 +600,75 @@ class Payto {
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/password
+	 * Gets URL password
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/password
 	 */
 	get password(): string {
 		return this.url.password;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/password
+	 * Sets URL password
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/password
 	 */
 	set password(value: string) {
 		this.url.password = value;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/pathname
+	 * Gets URL pathname
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/pathname
 	 */
 	get pathname(): string {
 		return this.url.pathname;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/pathname
+	 * Sets URL pathname
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/pathname
 	 */
 	set pathname(value: string) {
 		this.url.pathname = value;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/port
+	 * Gets URL port
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/port
 	 */
 	get port(): string {
 		return this.url.port;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/port
+	 * Sets URL port
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/port
 	 */
 	set port(value: string) {
 		this.url.port = value;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/protocol
+	 * Gets URL protocol
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/protocol
 	 */
 	get protocol(): string {
 		return this.url.protocol;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/protocol
+	 * Sets URL protocol
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/protocol
 	 */
 	set protocol(value: string) {
 		this.url.protocol = value;
 	}
 
+	/** Gets receiver name */
 	get receiverName(): string | null {
 		return this.searchParams.get('receiver-name');
 	}
 
+	/** Sets receiver name */
 	set receiverName(value: string | null) {
 		if (value) {
 			this.searchParams.set('receiver-name', value);
@@ -599,10 +677,12 @@ class Payto {
 		}
 	}
 
+	/** Gets recurring payment info */
 	get recurring(): string | null {
 		return this.searchParams.get('rc')?.toLowerCase() || null;
 	}
 
+	/** Sets recurring payment info */
 	set recurring(value: string | null) {
 		if (value) {
 			this.searchParams.set('rc', value);
@@ -611,6 +691,7 @@ class Payto {
 		}
 	}
 
+	/** Gets routing number for ACH payments */
 	get routingNumber(): number | null {
 		if (this.hostname === 'ach') {
 			if (this.pathname.length > 2) {
@@ -623,6 +704,10 @@ class Payto {
 		return null;
 	}
 
+	/**
+	 * Sets routing number for ACH payments
+	 * @throws Error if routing number format invalid
+	 */
 	set routingNumber(value: number | null) {
 		if (value && !Payto.ROUTING_NUMBER_REGEX.test(value.toString())) {
 			throw new Error('Invalid routing number format. Must be exactly 9 digits.');
@@ -640,7 +725,7 @@ class Payto {
 		}
 	}
 
-
+	/** Gets RTL (right-to-left) flag */
 	get rtl(): boolean | null {
 		if (this.searchParams.has('rtl')) {
 			const rtlValue = this.searchParams.get('rtl');
@@ -649,6 +734,7 @@ class Payto {
 		return null;
 	}
 
+	/** Sets RTL (right-to-left) flag */
 	set rtl(value: boolean | null) {
 		if (value === true) {
 			this.searchParams.set('rtl', '1');
@@ -656,27 +742,29 @@ class Payto {
 			this.searchParams.delete('rtl');
 		}
 	}
+
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/search
+	 * Gets URL search string
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/search
 	 */
 	get search(): string {
 		return this.url.search;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/search
+	 * Sets URL search string
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/search
 	 */
 	set search(value: string) {
 		this.url.search = value;
 	}
 
-	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams
-	 */
+	/** Gets URL search parameters */
 	get searchParams(): URLSearchParams {
 		return this.url.searchParams;
 	}
 
+	/** Gets payment split information as [receiver, amount, isPercentage] */
 	get split(): [string, string, boolean] | null {
 		const splitValue = this.searchParams.get('split');
 		if (splitValue) {
@@ -691,6 +779,10 @@ class Payto {
 		return null;
 	}
 
+	/**
+	 * Sets payment split information
+	 * @throws Error if receiver or amount missing
+	 */
 	set split(value: [string, string, boolean] | null) {
 		if (value === null) {
 			this.searchParams.delete('split');
@@ -706,10 +798,12 @@ class Payto {
 		this.searchParams.set('split', `${prefix}${amount}@${receiver}`);
 	}
 
+	/** Gets swap type */
 	get swap(): string | null {
 		return this.searchParams.get('swap')?.toLowerCase() || null;
 	}
 
+	/** Sets swap type */
 	set swap(value: string | null) {
 		if (value) {
 			this.searchParams.set('swap', value.toLowerCase());
@@ -719,19 +813,22 @@ class Payto {
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/username
+	 * Gets URL username
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/username
 	 */
 	get username(): string {
 		return this.url.username;
 	}
 
 	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/username
+	 * Sets URL username
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/username
 	 */
 	set username(value: string) {
 		this.url.username = value;
 	}
 
+	/** Gets payment value from amount */
 	get value(): number | null {
 		const amount = this.searchParams.get('amount');
 		if (amount) {
@@ -749,6 +846,7 @@ class Payto {
 		return null;
 	}
 
+	/** Sets payment value in amount */
 	set value(value: number | null) {
 		if (value === null) {
 			return;
@@ -767,6 +865,7 @@ class Payto {
 		}
 	}
 
+	/** Gets void type */
 	get void(): string | null {
 		if (this.hostname === 'void' && this.pathname.length > 1) {
 			const parts = this.pathname.split('/');
@@ -775,6 +874,7 @@ class Payto {
 		return null;
 	}
 
+	/** Sets void type */
 	set void(value: string | null) {
 		if (value) {
 			this.hostname = 'void';
@@ -786,20 +886,17 @@ class Payto {
 		}
 	}
 
-	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/toString
-	 */
+	/** Converts to URL string */
 	toString(): string {
 		return this.url.toString();
 	}
 
-	/**
-	 * @url: https://developer.mozilla.org/en-US/docs/Web/API/URL/toJSON
-	 */
+	/** Converts to JSON string */
 	toJSON(): string {
 		return this.url.toJSON();
 	}
 
+	/** Converts to PaytoJSON object with all properties */
 	toJSONObject(): PaytoJSON {
 		const obj: PaytoJSON = {};
 
