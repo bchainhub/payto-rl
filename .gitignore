@@ -10,6 +10,7 @@ package-lock.json
 
 /dist-test/
 /dist/
+/coverage/
 
 .DS_Store
 .AppleDouble

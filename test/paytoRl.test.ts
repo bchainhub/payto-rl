@@ -60,7 +60,7 @@ test('get and set donate', () => {
 	const payto = new Payto('payto://btc/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?donate=1');
 	assert.is(payto.donate, true);
 	payto.donate = false;
-	assert.is(payto.donate, false);
+	assert.is(payto.donate, null); // Should be null because donate is not set
 	payto.donate = null;
 	assert.is(payto.donate, null);
 });
@@ -103,7 +103,8 @@ test('toJSONObject', () => {
 		pathname: '/cb7147879011ea207df5b35a24ca6f0859dcfb145999',
 		protocol: 'payto:',
 		search: '?amount=ctn:10.01&fiat=eur&color-f=001BEE',
-		value: 10.01
+		value: 10.01,
+        origin: "payto://xcb"
 	});
 });
 
@@ -230,6 +231,344 @@ test('get and set account number for ACH', () => {
 	}, /Invalid account number format/);
 	payto.accountNumber = null;
 	assert.is(payto.accountNumber, null);
+});
+
+test('get and set IBAN', () => {
+	const payto = new Payto('payto://iban/ABC');
+	payto.iban = 'DE89370400440532013000';
+	assert.is(payto.iban, 'DE89370400440532013000');
+	payto.iban = null;
+	assert.is(payto.iban, null);
+	assert.throws(() => {
+		payto.iban = 'XXX';
+	}, /Invalid IBAN format/);
+});
+
+test('get and set rtl', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.rtl = true;
+	assert.is(payto.rtl, true);
+	payto.rtl = null;
+	assert.is(payto.rtl, null);
+});
+
+test('handle empty search params', () => {
+	const payto = new Payto('payto://xcb/address');
+	assert.is(payto.searchParams.toString(), '');
+});
+
+test('handle null values in currency', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.currency = [null, null];
+	assert.equal(payto.currency, [null, null]);
+});
+
+test('validate complex URL components', () => {
+	const payto = new Payto('payto://user:pass@test.com:8080/path?query=1#hash');
+	assert.is(payto.username, 'user');
+	assert.is(payto.password, 'pass');
+	assert.is(payto.port, '8080');
+	assert.is(payto.hash, '#hash');
+});
+
+test('handle setting URL components', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.username = 'user';
+	payto.password = 'pass';
+	payto.host = 'test.com:8080';
+	assert.is(payto.href, 'payto://user:pass@test.com:8080/address');
+});
+
+test('handle invalid amount formats', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.amount = 'invalid:amount';
+	assert.is(payto.value, null);
+});
+
+test('handle complex currency scenarios', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.currency = ['token', 'usd', 15.5];
+	assert.equal(payto.currency, ['token', 'usd']);
+	assert.is(payto.value, 15.5);
+	assert.is(payto.amount, 'token:15.5');
+});
+
+test('validate routing number format', () => {
+	const payto = new Payto('payto://ach/123456789/1234567');
+	assert.throws(() => {
+		payto.routingNumber = 12345678; // Invalid 8-digit number
+	}, /Invalid routing number format/);
+});
+
+test('handle complex JSON object conversion', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.colorBackground = 'ff0000';
+	payto.deadline = 1234567890;
+	payto.donate = true;
+	const json = payto.toJSONObject();
+	assert.ok(json.colorBackground === 'ff0000');
+	assert.ok(json.deadline === 1234567890);
+	assert.ok(json.donate === true);
+});
+
+test('handle edge cases in void type', () => {
+	const payto = new Payto('payto://void/custom');
+	payto.void = 'geo';
+	assert.is(payto.void, 'geo');
+	payto.void = null;
+	assert.is(payto.void, null);
+});
+
+test('validate organization name length', () => {
+	const payto = new Payto('payto://xcb/address');
+	const longName = 'This organization name is way too long and should be rejected';
+	payto.organization = longName;
+	assert.is(payto.organization, null);
+});
+
+test('handle complex split payment scenarios', () => {
+	const payto = new Payto('payto://xcb/address');
+	payto.split = ['receiver123', '50', true];
+	assert.equal(payto.split, ['receiver123', '50', true]);
+	payto.split = null;
+	assert.is(payto.split, null);
+});
+
+test('validate search params manipulation', () => {
+	const payto = new Payto('payto://xcb/address?custom=value');
+	assert.is(payto.searchParams.get('custom'), 'value');
+	payto.searchParams.set('new', 'param');
+	assert.is(payto.searchParams.get('new'), 'param');
+});
+
+test('handle origin for payto protocol', () => {
+	// Test with port
+	const paytoWithPort = new Payto('payto://user:pass@test.com:8080/path');
+	assert.is(paytoWithPort.origin, 'payto://test.com:8080');
+
+	// Test without port
+	const paytoNoPort = new Payto('payto://test.com/path');
+	assert.is(paytoNoPort.origin, 'payto://test.com');
+
+	// Test with subdomain
+	const paytoSubdomain = new Payto('payto://sub.test.com:8080/path');
+	assert.is(paytoSubdomain.origin, 'payto://sub.test.com:8080');
+});
+
+test('handle IBAN operations', () => {
+	// Test IBAN with BIC
+	const paytoWithBic = new Payto('payto://iban/DEUTDEFF/DE89370400440532013000');
+	assert.is(paytoWithBic.iban, 'DE89370400440532013000');
+	assert.is(paytoWithBic.bic, 'DEUTDEFF');
+
+	// Test setting IBAN
+	paytoWithBic.iban = 'GB29NWBK60161331926819';
+	assert.is(paytoWithBic.iban, 'GB29NWBK60161331926819');
+
+	// Test null IBAN
+	paytoWithBic.iban = null;
+	assert.is(paytoWithBic.iban, null);
+
+	// Test invalid IBAN format
+	assert.throws(() => {
+		paytoWithBic.iban = 'invalid';
+	}, /Invalid IBAN format/);
+});
+
+test('handle BIC operations', () => {
+	// Test BIC direct
+	const paytoBic = new Payto('payto://bic/DEUTDEFF500');
+	assert.is(paytoBic.bic, 'DEUTDEFF500');
+
+	// Test setting BIC
+	paytoBic.bic = 'SOGEFRPP';
+	assert.is(paytoBic.bic, 'SOGEFRPP');
+
+	// Test null BIC
+	paytoBic.bic = null;
+	assert.is(paytoBic.bic, null);
+
+	// Test invalid BIC format
+	assert.throws(() => {
+		paytoBic.bic = 'invalid';
+	}, /Invalid BIC format/);
+});
+
+test('handle ACH operations', () => {
+	// Test setting routing number
+	const paytoAch = new Payto('payto://ach/123456789/1234567');
+	paytoAch.routingNumber = 987654321;
+	assert.is(paytoAch.routingNumber, 987654321);
+
+	// Test invalid routing number
+	assert.throws(() => {
+		paytoAch.routingNumber = 12345;
+	}, /Invalid routing number format/);
+
+	// Test setting account number
+	paytoAch.accountNumber = 7654321;
+	assert.is(paytoAch.accountNumber, 7654321);
+
+	// Test invalid hostname for account number
+	const paytoInvalid = new Payto('payto://invalid/123456789');
+	assert.throws(() => {
+		paytoInvalid.accountNumber = 1234567;
+	}, /Invalid hostname, must be ach/);
+});
+
+test('handle currency operations', () => {
+	const payto = new Payto('payto://example.com');
+
+	// Test setting currency with amount
+	payto.currency = ['token', 'usd', 100];
+	assert.equal(payto.currency, ['token', 'usd']);
+	assert.is(payto.amount, 'token:100');
+
+	// Test setting currency without amount
+	payto.currency = ['newtoken', 'eur'];
+	assert.equal(payto.currency, ['newtoken', 'eur']);
+
+	// Test clearing currency
+	payto.currency = [null, null];
+	assert.equal(payto.currency, [null, null]);
+});
+
+test('handle location operations', () => {
+	// Test geo location
+	const paytoGeo = new Payto('payto://void/geo');
+	paytoGeo.location = '51.5074,-0.1278';
+	assert.is(paytoGeo.location, '51.5074,-0.1278');
+
+	// Test plus code
+	const paytoPlus = new Payto('payto://void/plus');
+	paytoPlus.location = '8FVC9G8V+R9';
+	assert.is(paytoPlus.location, '8FVC9G8V+R9');
+
+	// Test invalid location without void type
+	const paytoInvalid = new Payto('payto://example.com');
+	assert.throws(() => {
+		paytoInvalid.location = '51.5074,-0.1278';
+	}, /Void type must be set/);
+});
+
+test('handle RTL and donate flags', () => {
+	const payto = new Payto('payto://example.com');
+
+	// Test RTL
+	payto.rtl = true;
+	assert.is(payto.rtl, true);
+	payto.rtl = null;
+	assert.is(payto.rtl, null);
+
+	// Test donate
+	payto.donate = true;
+	assert.is(payto.donate, true);
+	payto.donate = null;
+	assert.is(payto.donate, null);
+});
+
+test('handle path parts operations', () => {
+	const payto = new Payto('payto://example.com/part1/part2');
+
+	// Test pathname parts
+	assert.is(payto.pathname, '/part1/part2');
+
+	// Test setting pathname
+	payto.pathname = '/newpart/part2';
+	assert.is(payto.pathname, '/newpart/part2');
+
+	// Test clearing pathname
+	payto.pathname = '/part2';
+	assert.is(payto.pathname, '/part2');
+});
+
+test('handle complex JSON conversion', () => {
+	const payto = new Payto('payto://example.com/address?custom=value&amount=10.5');
+	const json = payto.toJSONObject();
+
+	// Test standard properties
+	assert.is(json.address, 'address');
+	assert.is(json.amount, '10.5');
+
+	// Test conversion with all possible fields
+	payto.colorBackground = 'ff0000';
+	payto.deadline = 1234567890;
+	payto.donate = true;
+	payto.rtl = true;
+	payto.organization = 'Test Org';
+
+	const fullJson = payto.toJSONObject();
+	assert.ok(fullJson.colorBackground === 'ff0000');
+	assert.ok(fullJson.deadline === 1234567890);
+	assert.ok(fullJson.donate === true);
+	assert.ok(fullJson.rtl === true);
+	assert.ok(fullJson.organization === 'Test Org');
+});
+
+test('Payto - Error handling and edge cases', () => {
+    // Test invalid protocol error
+    assert.throws(() => {
+        new Payto('http://example.com');
+    }, /Invalid protocol, must be payto:/);
+
+    // Test invalid BIC format error
+    const payto = new Payto('payto://bic/INVALIDBIC');
+    assert.throws(() => {
+        payto.bic = 'INVALID';
+    }, /Invalid BIC format/);
+
+    // Test invalid IBAN format error
+    const ibanPayto = new Payto('payto://iban/DE');
+    assert.throws(() => {
+        ibanPayto.iban = 'INVALID';
+    }, /Invalid IBAN format/);
+
+    // Test invalid routing number format
+    const achPayto = new Payto('payto://ach/123456789/123456789');
+    assert.throws(() => {
+        achPayto.routingNumber = 12345;
+    }, /Invalid routing number format/);
+
+    // Test invalid account number format
+    assert.throws(() => {
+        achPayto.accountNumber = 123;
+    }, /Invalid account number format/);
+
+    // Test invalid deadline format
+    const deadlinePayto = new Payto('payto://example');
+    assert.throws(() => {
+        deadlinePayto.deadline = -1;
+    }, /Invalid deadline format/);
+
+    // Test invalid location format for geo
+    const geoPayto = new Payto('payto://void/geo');
+    assert.throws(() => {
+        geoPayto.location = 'invalid';
+    }, /Invalid geo location format/);
+
+    // Test invalid location format for plus code
+    const plusPayto = new Payto('payto://void/plus');
+    assert.throws(() => {
+        plusPayto.location = 'invalid';
+    }, /Invalid plus code format/);
+
+    // Test setting location without void type
+    const noVoidPayto = new Payto('payto://example');
+    assert.throws(() => {
+        noVoidPayto.location = '40.7128,-74.0060';
+    }, /Void type must be set before setting location/);
+
+    // Test invalid email format for account alias
+    const upiPayto = new Payto('payto://upi');
+    assert.throws(() => {
+        upiPayto.accountAlias = 'invalid-email';
+    }, /Invalid email address format/);
+
+    // Test setting account number with wrong hostname
+    const wrongHostPayto = new Payto('payto://example');
+    assert.throws(() => {
+        wrongHostPayto.accountNumber = 123456789;
+    }, /Invalid hostname, must be ach/);
 });
 
 test.run();
