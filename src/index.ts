@@ -1,6 +1,42 @@
-type JSONObject = {
+export type PaytoJSON = {
 	[key: string]: any;
-	[key: number]: never;
+	port?: string;
+	host?: string;
+	hostname?: string;
+	href?: string;
+	origin?: string | null;
+	password?: string;
+	pathname?: string;
+	protocol?: string;
+	search?: string;
+	username?: string;
+	accountAlias?: string | null;
+	accountNumber?: number | null;
+	address?: string | null;
+	amount?: string | null;
+	asset?: string | null;
+	barcode?: string | null;
+	bic?: string | null;
+	colorBackground?: string | null;
+	colorForeground?: string | null;
+	currency?: [string | null, string | null];
+	deadline?: number | null;
+	donate?: boolean | null;
+	fiat?: string | null;
+	hash?: string;
+	iban?: string | null;
+	item?: string | null;
+	location?: string | null;
+	message?: string | null;
+	network?: string;
+	organization?: string | null;
+	receiverName?: string | null;
+	recurring?: string | null;
+	route?: string | null;
+	routingNumber?: number | null;
+	split?: [string, string, boolean] | null;
+	value?: number | null;
+	void?: string | null;
 };
 
 class Payto {
@@ -645,8 +681,8 @@ class Payto {
 		return this.url.toJSON();
 	}
 
-	toJSONObject(): JSONObject {
-		const obj: JSONObject = {};
+	toJSONObject(): PaytoJSON {
+		const obj: PaytoJSON = {};
 
 		// URL properties
 		if (this.port) obj.port = this.port;
