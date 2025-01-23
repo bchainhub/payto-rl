@@ -14,7 +14,7 @@
 - 📜 **Standardized**: Based on the [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) Web API.
 - 🏗️ **Simple**: Easy to implement.
 - 🗂 **Typed**: Ships with types included.
-- 🧪 **Tested**: 100% test coverage.
+- 🧪 **Tested**: Robust test coverage.
 - 🌲 **Tree Shaking**: Zero dependencies, no side effects.
 
 ## Installation

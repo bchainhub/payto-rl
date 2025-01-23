@@ -505,4 +505,70 @@ test('handle complex JSON conversion', () => {
 	assert.ok(fullJson.organization === 'Test Org');
 });
 
+test('Payto - Error handling and edge cases', () => {
+    // Test invalid protocol error
+    assert.throws(() => {
+        new Payto('http://example.com');
+    }, /Invalid protocol, must be payto:/);
+
+    // Test invalid BIC format error
+    const payto = new Payto('payto://bic/INVALIDBIC');
+    assert.throws(() => {
+        payto.bic = 'INVALID';
+    }, /Invalid BIC format/);
+
+    // Test invalid IBAN format error
+    const ibanPayto = new Payto('payto://iban/DE');
+    assert.throws(() => {
+        ibanPayto.iban = 'INVALID';
+    }, /Invalid IBAN format/);
+
+    // Test invalid routing number format
+    const achPayto = new Payto('payto://ach/123456789/123456789');
+    assert.throws(() => {
+        achPayto.routingNumber = 12345;
+    }, /Invalid routing number format/);
+
+    // Test invalid account number format
+    assert.throws(() => {
+        achPayto.accountNumber = 123;
+    }, /Invalid account number format/);
+
+    // Test invalid deadline format
+    const deadlinePayto = new Payto('payto://example');
+    assert.throws(() => {
+        deadlinePayto.deadline = -1;
+    }, /Invalid deadline format/);
+
+    // Test invalid location format for geo
+    const geoPayto = new Payto('payto://void/geo');
+    assert.throws(() => {
+        geoPayto.location = 'invalid';
+    }, /Invalid geo location format/);
+
+    // Test invalid location format for plus code
+    const plusPayto = new Payto('payto://void/plus');
+    assert.throws(() => {
+        plusPayto.location = 'invalid';
+    }, /Invalid plus code format/);
+
+    // Test setting location without void type
+    const noVoidPayto = new Payto('payto://example');
+    assert.throws(() => {
+        noVoidPayto.location = '40.7128,-74.0060';
+    }, /Void type must be set before setting location/);
+
+    // Test invalid email format for account alias
+    const upiPayto = new Payto('payto://upi');
+    assert.throws(() => {
+        upiPayto.accountAlias = 'invalid-email';
+    }, /Invalid email address format/);
+
+    // Test setting account number with wrong hostname
+    const wrongHostPayto = new Payto('payto://example');
+    assert.throws(() => {
+        wrongHostPayto.accountNumber = 123456789;
+    }, /Invalid hostname, must be ach/);
+});
+
 test.run();
