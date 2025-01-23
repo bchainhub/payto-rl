@@ -117,7 +117,7 @@ class Payto {
 
 	/**
 	 * Sets email alias for UPI/PIX payments
-	 * @throws Error if email format is invalid 
+	 * @throws Error if email format is invalid
 	 */
 	set accountAlias(value: string | null) {
 		if (value) {
@@ -144,7 +144,7 @@ class Payto {
 
 	/**
 	 * Sets account number for ACH payments
-	 * @throws Error if format invalid or wrong hostname 
+	 * @throws Error if format invalid or wrong hostname
 	 */
 	set accountNumber(value: number | null) {
 		if (!this.hostname || this.hostname !== 'ach') {
@@ -203,9 +203,10 @@ class Payto {
 	/** Sets asset type in currency */
 	set asset(value: string | null) {
 		if (value === null) {
-			this.currency = [null, null];
+			// Reset currency to null
+			this.currency = [null];
 		} else {
-			this.currency = [value, null];
+			this.currency = [value];
 		}
 	}
 
@@ -299,39 +300,51 @@ class Payto {
 		const result: [string | null, string | null] = [null, null];
 		const amountValue = this.searchParams.get('amount');
 		const fiatValue = this.fiat;
+
 		if (amountValue) {
 			const amountArray = amountValue.split(':');
 			if (amountArray[0] && isNaN(parseFloat(amountArray[0]))) {
 				result[0] = amountArray[0];
 			}
 		}
+
 		if (fiatValue) {
 			result[1] = fiatValue;
 		}
+
 		return result;
 	}
 
-	/** Sets currency from [token, fiat, amount] array */
-	set currency(value: Array<string | number | null | undefined>) {
-		const [token, fiat, amount] = value;
+	/** Sets currency from [token, fiat, value] array */
+	set currency(valueArray: Array<string | number | null | undefined>) {
+		if (valueArray.length > 3) {
+			throw new Error('Invalid currency array length');
+		}
+		const [token, fiat, value] = valueArray;
 		const amountValue = this.searchParams.get('amount');
-		let oldToken, oldValue;
+		let prevToken, prevValue;
 		if (amountValue) {
 			const amountArray = amountValue.split(':');
 			if (amountArray[1]) {
-				oldToken = amountArray[0];
-				oldValue = amountArray[1];
+				prevToken = amountArray[0];
+				prevValue = amountArray[1];
 			} else {
-				oldValue = amountArray[0];
+				prevValue = amountArray[0];
 			}
+		} else if (value === null) {
+			prevValue = null;
 		}
 		if (fiat && typeof fiat === 'string') {
 			this.fiat = fiat.toLowerCase();
+		} else if (fiat === null) {
+			this.fiat = null;
 		}
 		if (token) {
-			this.amount = `${token}:${amount || (oldValue || '')}`;
-		} else if (amount) {
-			this.amount = `${oldToken ? oldToken + ':' : ''}${amount}`;
+			this.amount = `${token}:${value || (prevValue || '')}`;
+		} else if (token === null) {
+			this.amount = `${value || prevValue ? ':' : ''}${value || (prevValue || '')}`;
+		} else if (value) {
+			this.amount = `${prevToken ? prevToken + ':' : ''}${value}`;
 		}
 	}
 

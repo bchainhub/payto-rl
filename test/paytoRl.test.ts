@@ -355,4 +355,157 @@ test('handle origin for payto protocol', () => {
 	assert.is(paytoSubdomain.origin, 'payto://sub.test.com:8080');
 });
 
+test('handle IBAN operations', () => {
+	// Test IBAN with BIC
+	const paytoWithBic = new Payto('payto://iban/DEUTDEFF/DE89370400440532013000');
+	assert.is(paytoWithBic.iban, 'DE89370400440532013000');
+	assert.is(paytoWithBic.bic, 'DEUTDEFF');
+
+	// Test setting IBAN
+	paytoWithBic.iban = 'GB29NWBK60161331926819';
+	assert.is(paytoWithBic.iban, 'GB29NWBK60161331926819');
+
+	// Test null IBAN
+	paytoWithBic.iban = null;
+	assert.is(paytoWithBic.iban, null);
+
+	// Test invalid IBAN format
+	assert.throws(() => {
+		paytoWithBic.iban = 'invalid';
+	}, /Invalid IBAN format/);
+});
+
+test('handle BIC operations', () => {
+	// Test BIC direct
+	const paytoBic = new Payto('payto://bic/DEUTDEFF500');
+	assert.is(paytoBic.bic, 'DEUTDEFF500');
+
+	// Test setting BIC
+	paytoBic.bic = 'SOGEFRPP';
+	assert.is(paytoBic.bic, 'SOGEFRPP');
+
+	// Test null BIC
+	paytoBic.bic = null;
+	assert.is(paytoBic.bic, null);
+
+	// Test invalid BIC format
+	assert.throws(() => {
+		paytoBic.bic = 'invalid';
+	}, /Invalid BIC format/);
+});
+
+test('handle ACH operations', () => {
+	// Test setting routing number
+	const paytoAch = new Payto('payto://ach/123456789/1234567');
+	paytoAch.routingNumber = 987654321;
+	assert.is(paytoAch.routingNumber, 987654321);
+
+	// Test invalid routing number
+	assert.throws(() => {
+		paytoAch.routingNumber = 12345;
+	}, /Invalid routing number format/);
+
+	// Test setting account number
+	paytoAch.accountNumber = 7654321;
+	assert.is(paytoAch.accountNumber, 7654321);
+
+	// Test invalid hostname for account number
+	const paytoInvalid = new Payto('payto://invalid/123456789');
+	assert.throws(() => {
+		paytoInvalid.accountNumber = 1234567;
+	}, /Invalid hostname, must be ach/);
+});
+
+test('handle currency operations', () => {
+	const payto = new Payto('payto://example.com');
+
+	// Test setting currency with amount
+	payto.currency = ['token', 'usd', 100];
+	assert.equal(payto.currency, ['token', 'usd']);
+	assert.is(payto.amount, 'token:100');
+
+	// Test setting currency without amount
+	payto.currency = ['newtoken', 'eur'];
+	assert.equal(payto.currency, ['newtoken', 'eur']);
+
+	// Test clearing currency
+	payto.currency = [null, null];
+	assert.equal(payto.currency, [null, null]);
+});
+
+test('handle location operations', () => {
+	// Test geo location
+	const paytoGeo = new Payto('payto://void/geo');
+	paytoGeo.location = '51.5074,-0.1278';
+	assert.is(paytoGeo.location, '51.5074,-0.1278');
+
+	// Test plus code
+	const paytoPlus = new Payto('payto://void/plus');
+	paytoPlus.location = '8FVC9G8V+R9';
+	assert.is(paytoPlus.location, '8FVC9G8V+R9');
+
+	// Test invalid location without void type
+	const paytoInvalid = new Payto('payto://example.com');
+	assert.throws(() => {
+		paytoInvalid.location = '51.5074,-0.1278';
+	}, /Void type must be set/);
+});
+
+test('handle RTL and donate flags', () => {
+	const payto = new Payto('payto://example.com');
+
+	// Test RTL
+	payto.rtl = true;
+	assert.is(payto.rtl, true);
+	payto.rtl = null;
+	assert.is(payto.rtl, null);
+
+	// Test donate
+	payto.donate = true;
+	assert.is(payto.donate, true);
+	payto.donate = null;
+	assert.is(payto.donate, null);
+});
+
+test('handle path parts operations', () => {
+	const payto = new Payto('payto://example.com/part1/part2');
+
+	// Test pathname parts
+	assert.is(payto.pathname, '/part1/part2');
+
+	// Test setting pathname
+	payto.pathname = '/newpart/part2';
+	assert.is(payto.pathname, '/newpart/part2');
+
+	// Test clearing pathname
+	payto.pathname = '/part2';
+	assert.is(payto.pathname, '/part2');
+});
+
+test('handle complex JSON conversion', () => {
+	const payto = new Payto('payto://example.com/address?custom=value&amount=10.5');
+	const json = payto.toJSONObject();
+
+	// Test standard properties
+	assert.is(json.address, 'address');
+	assert.is(json.amount, '10.5');
+
+	// Test custom fields
+	assert.is(json.custom, 'value');
+
+	// Test conversion with all possible fields
+	payto.colorBackground = 'ff0000';
+	payto.deadline = 1234567890;
+	payto.donate = true;
+	payto.rtl = true;
+	payto.organization = 'Test Org';
+
+	const fullJson = payto.toJSONObject();
+	assert.ok(fullJson.colorBackground === 'ff0000');
+	assert.ok(fullJson.deadline === 1234567890);
+	assert.ok(fullJson.donate === true);
+	assert.ok(fullJson.rtl === true);
+	assert.ok(fullJson.organization === 'Test Org');
+});
+
 test.run();
