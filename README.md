@@ -7,7 +7,7 @@
 Install the `payto-rl` package using npm or yarn:
 
 ```sh
-npm install payto-rl
+npm i payto-rl
 ```
 
 ```sh
@@ -69,6 +69,11 @@ const bankPayto = new Payto('payto://bic/DEUTDEFF500');
 console.log(bankPayto.bic);           // 'DEUTDEFF500'
 bankPayto.routingNumber = 123456789;  // Valid 9-digit routing number
 console.log(bankPayto.routingNumber); // 123456789
+
+// Convert to JSON object
+const jsonObj = payto.toJSONObject();
+console.log(jsonObj.colorForeground); // Access typed properties
+console.log(jsonObj['custom-field']); // Access custom properties
 ```
 
 ## API Reference
@@ -94,7 +99,7 @@ Creates a new Payto instance from a payto URL string.
 | `bic` | `string \| null` | Bank Identifier Code (8 or 11 characters) |
 | `colorBackground` | `string \| null` | Background color in hex format |
 | `colorForeground` | `string \| null` | Foreground color in hex format |
-| `currency` | `[string, string?, string?]` | Currency codes array |
+| `currency` | `[string \| null, string \| null]` | Currency codes array |
 | `deadline` | `number \| null` | Payment deadline (Unix timestamp) |
 | `donate` | `boolean \| null` | Donation flag |
 | `fiat` | `string \| null` | Fiat currency code |
@@ -131,7 +136,7 @@ Creates a new Payto instance from a payto URL string.
 |--------|-------------|-------------|
 | `toString()` | `string` | Returns the complete payto URL string |
 | `toJSON()` | `string` | Returns a JSON string representation |
-| `toJSONObject()` | `object` | Returns a plain object with all properties |
+| `toJSONObject()` | `PaytoJSON` | Returns a typed object with all properties and custom fields |
 
 ## Type Safety
 
@@ -145,6 +150,7 @@ The library includes TypeScript type definitions and runtime validation for:
 - Plus codes
 - Unix timestamps
 - Barcode formats
+- IBAN format
 
 ## Payment System Support
 
