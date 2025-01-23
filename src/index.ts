@@ -1,5 +1,6 @@
 export type PaytoJSON = {
 	[key: string]: any;
+	[key: number]: never;
 	port?: string;
 	host?: string;
 	hostname?: string;
@@ -40,13 +41,14 @@ export type PaytoJSON = {
 };
 
 class Payto {
+	private static readonly ACCOUNT_NUMBER_REGEX = /^(\d{7,14})$/;
 	private static readonly BIC_REGEX = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/i;
+	private static readonly EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+	private static readonly GEO_LOCATION_REGEX = /^(\+|-)?(?:90(?:\.0{1,6})?|(?:[0-9]|[1-8][0-9])(?:\.[0-9]{1,6})?),(\+|-)?(?:180(?:\.0{1,6})?|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:\.[0-9]{1,6})?)$/;
+	private static readonly IBAN_REGEX = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{12,30}$/i;
+	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
 	private static readonly ROUTING_NUMBER_REGEX = /^(\d{9})$/;
 	private static readonly UNIX_TIMESTAMP_REGEX = /^\d+$/;
-	private static readonly ACCOUNT_NUMBER_REGEX = /^(\d{7,14})$/;
-	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
-	private static readonly GEO_LOCATION_REGEX = /^(\+|-)?(?:90(?:\.0{1,6})?|(?:[0-9]|[1-8][0-9])(?:\.[0-9]{1,6})?),(\+|-)?(?:180(?:\.0{1,6})?|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:\.[0-9]{1,6})?)$/;
-	private static readonly EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 	private url: URL;
 
@@ -349,11 +351,15 @@ class Payto {
 	}
 
 	get iban(): string | null {
-		return this.getHostnameParts(this.pathname.split('/'), 'iban', 2);
+		const ibanStr = this.getHostnameParts(this.pathname.split('/'), 'iban', 2);
+		return ibanStr && Payto.IBAN_REGEX.test(ibanStr) ? ibanStr.toUpperCase() : null;
 	}
 
 	set iban(value: string | null) {
-		this.setHostnameParts(value, 2);
+		if (value && !Payto.IBAN_REGEX.test(value)) {
+			throw new Error('Invalid IBAN format');
+		}
+		this.setHostnameParts(value?.toUpperCase() ?? null, 2);
 	}
 
 	get item(): string | null {
@@ -369,10 +375,14 @@ class Payto {
 	}
 
 	get location(): string | null {
+		const voidType = this.void;
+		if (!voidType) {
+			return null;
+		}
+
 		const value = this.searchParams.get('loc');
 		if (!value) return null;
 
-		const voidType = this.void;
 		if (voidType === 'geo') {
 			return Payto.GEO_LOCATION_REGEX.test(value) ? value : null;
 		}
