@@ -369,7 +369,18 @@ class Payto {
 	}
 
 	get location(): string | null {
-		return this.searchParams.get('loc') as string | null;
+		const value = this.searchParams.get('loc');
+		if (!value) return null;
+
+		const voidType = this.void;
+		if (voidType === 'geo') {
+			return Payto.GEO_LOCATION_REGEX.test(value) ? value : null;
+		}
+		if (voidType === 'plus') {
+			return Payto.PLUS_CODE_REGEX.test(value) ? value : null;
+		}
+
+		return value;
 	}
 
 	set location(value: string | null) {
