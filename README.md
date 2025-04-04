@@ -134,7 +134,7 @@ Creates a new Payto instance from a payto URL string.
 | `colorBackground` | `string \| null` | Background color in 6-character hex format |
 | `colorForeground` | `string \| null` | Foreground color in 6-character hex format |
 | `currency` | `[string \| null, string \| null]` | Currency codes array [asset, fiat] |
-| `deadline` | `number \| null` | Payment deadline (Unix timestamp) |
+| `deadline` | `number \| null` | Payment deadline (Unix timestamp or positive integer) |
 | `donate` | `boolean \| null` | Donation flag |
 | `fiat` | `string \| null` | Fiat currency code (case-insensitive) |
 | `hash` | `string` | URL hash component |

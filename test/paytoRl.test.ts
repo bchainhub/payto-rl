@@ -54,6 +54,8 @@ test('get and set deadline', () => {
 	assert.is(payto.deadline, 1672531199);
 	payto.deadline = 1672617599;
 	assert.is(payto.deadline, 1672617599);
+	payto.deadline = 22; // Should be deadline 22 minutes from now
+	assert.is(payto.deadline, 22);
 });
 
 test('get and set donate', () => {
