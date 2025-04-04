@@ -54,14 +54,11 @@ class Payto {
 	/** Validates IBAN */
 	private static readonly IBAN_REGEX = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{12,30}$/i;
 
-	/** Validates Plus codes */
-	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
+	/** Validates Plus codes - only long format is supported */
+	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
 
 	/** Validates routing numbers (9 digits) */
 	private static readonly ROUTING_NUMBER_REGEX = /^(\d{9})$/;
-
-	/** Validates Unix timestamps */
-	private static readonly UNIX_TIMESTAMP_REGEX = /^\d+$/;
 
 	/** Internal URL object */
 	private url: URL;
@@ -346,12 +343,14 @@ class Payto {
 		}
 	}
 
-	/** Gets payment deadline as Unix timestamp */
+	/** Gets payment deadline as Unix timestamp or positive integer */
 	get deadline(): number | null {
 		const dl = this.searchParams.get('dl');
-		if (dl !== null && Payto.UNIX_TIMESTAMP_REGEX.test(dl)) {
+		if (dl !== null) {
 			const timestamp = parseInt(dl, 10);
-			return timestamp >= 0 ? timestamp : null;
+			if (!isNaN(timestamp) && timestamp >= 0) {
+				return timestamp;
+			}
 		}
 		return null;
 	}
@@ -362,8 +361,8 @@ class Payto {
 	 */
 	set deadline(value: number | null) {
 		if (value !== null) {
-			if (!Number.isInteger(value) || value < 0 || !Payto.UNIX_TIMESTAMP_REGEX.test(value.toString())) {
-				throw new Error('Invalid deadline format. Must be a positive integer (Unix timestamp).');
+			if (!Number.isInteger(value) || value < 0) {
+				throw new Error('Invalid deadline format. Must be a positive integer.');
 			}
 			this.searchParams.set('dl', value.toString());
 		} else {
