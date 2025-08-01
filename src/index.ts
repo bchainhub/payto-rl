@@ -18,6 +18,7 @@ export type PaytoJSON = {
 	href?: string;
 	iban?: string | null;
 	item?: string | null;
+	lang?: string | null;
 	location?: string | null;
 	message?: string | null;
 	network?: string;
@@ -53,6 +54,9 @@ class Payto {
 
 	/** Validates IBAN */
 	private static readonly IBAN_REGEX = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{12,30}$/i;
+
+	/** Validates language/locale codes (e.g., 'en', 'en-US', 'en-us', 'fr-CA') */
+	private static readonly LANG_REGEX = /^[a-z]{2}(-[a-zA-Z]{2})?$/;
 
 	/** Validates Plus codes - only long format is supported */
 	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
@@ -898,6 +902,26 @@ class Payto {
 		}
 	}
 
+	/** Gets language/locale code */
+	get lang(): string | null {
+		return this.searchParams.get('lang')?.toLowerCase() || null;
+	}
+
+	/**
+	 * Sets language/locale code
+	 * @throws Error if language format invalid
+	 */
+	set lang(value: string | null) {
+		if (value) {
+			if (!Payto.LANG_REGEX.test(value)) {
+				throw new Error('Invalid language format. Must be a valid 2-letter language code (e.g., "en", "en-US", "en-us", "fr-CA").');
+			}
+			this.searchParams.set('lang', value.toLowerCase());
+		} else {
+			this.searchParams.delete('lang');
+		}
+	}
+
 	/** Converts to URL string */
 	toString(): string {
 		return this.url.toString();
@@ -941,6 +965,7 @@ class Payto {
 		if (this.hash) obj.hash = this.hash;
 		if (this.iban) obj.iban = this.iban;
 		if (this.item) obj.item = this.item;
+		if (this.lang) obj.lang = this.lang;
 		if (this.location) obj.location = this.location;
 		if (this.message) obj.message = this.message;
 		if (this.network) obj.network = this.network;

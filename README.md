@@ -94,6 +94,17 @@ console.log(bankPayto.bic);           // 'DEUTDEFF500'
 bankPayto.routingNumber = 123456789;  // Valid 9-digit routing number
 console.log(bankPayto.routingNumber); // 123456789
 
+// Language/locale example
+const langPayto = new Payto('payto://xcb/address?lang=en-US');
+console.log(langPayto.lang);          // 'en-us'
+langPayto.lang = 'fr-CA';
+console.log(langPayto.lang);          // 'fr-ca'
+langPayto.lang = 'es';
+console.log(langPayto.lang);          // 'es'
+// Language codes must be 2-letter language codes, with optional region (2 letters, case-insensitive)
+// Valid: 'en', 'es', 'en-US', 'en-us', 'fr-CA', 'fr-ca', 'zh-CN'
+// Invalid: 'EN', 'EN-US', 'invalid', 'eng', 'fra'
+
 // Value handling examples
 const numericPayto = new Payto('payto://example/address?amount=10.5');
 console.log(numericPayto.value);  // 10.5
@@ -142,11 +153,12 @@ Creates a new Payto instance from a payto URL string.
 | `hostname` | `string` | Host without port (case-insensitive) |
 | `href` | `string` | Complete URL string |
 | `iban` | `string \| null` | International Bank Account Number (case-insensitive) |
-| `item` | `string \| null` | Item description (max 40 chars) |
+| `item` | `string \| null` | Item description (maximum 40 characters) |
+| `lang` | `string \| null` | Language/locale code (2-letter language code, e.g., 'en', 'en-US', 'en-us', 'fr-CA') |
 | `location` | `string \| null` | Location data (format depends on void type) |
 | `message` | `string \| null` | Payment message |
 | `network` | `string` | Network identifier (case-insensitive) |
-| `organization` | `string \| null` | Organization name (max 25 chars) |
+| `organization` | `string \| null` | Organization name (maximum 25 characters) |
 | `origin` | `string \| null` | URL origin |
 | `password` | `string` | URL password component |
 | `pathname` | `string` | URL path component |
@@ -155,7 +167,7 @@ Creates a new Payto instance from a payto URL string.
 | `receiverName` | `string \| null` | Receiver's name |
 | `recurring` | `string \| null` | Recurring payment details |
 | `routingNumber` | `number \| null` | Bank routing number (9 digits) |
-| `rtl` | `boolean \| null` | right-to-left layout |
+| `rtl` | `boolean \| null` | Right-to-left layout |
 | `search` | `string` | URL search component |
 | `searchParams` | `URLSearchParams` | URL search parameters |
 | `split` | `[string, string, boolean] \| null` | Payment split information |
@@ -186,6 +198,7 @@ The library includes TypeScript type definitions and runtime validation for:
 - Barcode formats
 - IBAN format (case-insensitive)
 - Color formats (6-character hex)
+- Language/locale codes (2-letter language codes with optional region codes, case-insensitive)
 
 ## Payment System Support
 
