@@ -12,7 +12,7 @@ body:
     id: problem
     attributes:
       label: Problem
-      description: What problem does your feature request aim to solve? Please describe.
+      description: What problem does your feature request aim to solve? Please describe it.
     validations:
       required: true
 

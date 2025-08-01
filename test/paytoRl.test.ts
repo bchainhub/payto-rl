@@ -573,4 +573,147 @@ test('Payto - Error handling and edge cases', () => {
     }, /Invalid hostname, must be ach/);
 });
 
+test('get and set lang', () => {
+	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?lang=en');
+	assert.is(payto.lang, 'en');
+	payto.lang = 'fr';
+	assert.is(payto.lang, 'fr');
+	payto.lang = 'en-US';
+	assert.is(payto.lang, 'en-us');
+	payto.lang = 'fr-CA';
+	assert.is(payto.lang, 'fr-ca');
+	payto.lang = null;
+	assert.is(payto.lang, null);
+});
+
+test('lang validation - valid formats', () => {
+	const payto = new Payto('payto://xcb/address');
+
+	// Test valid language codes (2 letters)
+	payto.lang = 'en';
+	assert.is(payto.lang, 'en');
+
+	payto.lang = 'es';
+	assert.is(payto.lang, 'es');
+
+	payto.lang = 'en-US';
+	assert.is(payto.lang, 'en-us');
+
+	payto.lang = 'en-us';
+	assert.is(payto.lang, 'en-us');
+
+	payto.lang = 'fr-CA';
+	assert.is(payto.lang, 'fr-ca');
+
+	payto.lang = 'fr-ca';
+	assert.is(payto.lang, 'fr-ca');
+
+	payto.lang = 'zh-CN';
+	assert.is(payto.lang, 'zh-cn');
+
+	payto.lang = 'zh-cn';
+	assert.is(payto.lang, 'zh-cn');
+
+	payto.lang = 'pt-BR';
+	assert.is(payto.lang, 'pt-br');
+
+	payto.lang = 'pt-br';
+	assert.is(payto.lang, 'pt-br');
+
+	// Test mixed case region codes
+	payto.lang = 'en-Us';
+	assert.is(payto.lang, 'en-us');
+
+	payto.lang = 'fr-Ca';
+	assert.is(payto.lang, 'fr-ca');
+});
+
+test('lang validation - invalid formats', () => {
+	const payto = new Payto('payto://xcb/address');
+
+	// Test invalid language codes
+	assert.throws(() => {
+		payto.lang = 'invalid';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'e';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'eng';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'EN-US';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'en-USA';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'en-US-EXTRA';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'EN';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'En';
+	}, /Invalid language format/);
+
+	// Test 3-letter language codes (should be invalid)
+	assert.throws(() => {
+		payto.lang = 'fra';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'spa';
+	}, /Invalid language format/);
+});
+
+test('lang case handling', () => {
+	const payto = new Payto('payto://xcb/address?lang=en-US');
+	assert.is(payto.lang, 'en-us');
+
+	payto.lang = 'fr-CA';
+	assert.is(payto.lang, 'fr-ca');
+
+	payto.lang = 'en-us';
+	assert.is(payto.lang, 'en-us');
+
+	// Test that invalid case formats are rejected
+	assert.throws(() => {
+		payto.lang = 'EN-US';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'EN';
+	}, /Invalid language format/);
+});
+
+test('lang in toJSONObject', () => {
+	const payto = new Payto('payto://xcb/address?lang=en-US');
+	const json = payto.toJSONObject();
+	assert.is(json.lang, 'en-us');
+
+	payto.lang = null;
+	const jsonWithoutLang = payto.toJSONObject();
+	assert.is(jsonWithoutLang.lang, undefined);
+});
+
+test('lang with other parameters', () => {
+	const payto = new Payto('payto://xcb/address?amount=10&lang=fr&fiat=eur');
+	assert.is(payto.lang, 'fr');
+	assert.is(payto.amount, '10');
+	assert.is(payto.fiat, 'eur');
+
+	payto.lang = 'es';
+	assert.is(payto.lang, 'es');
+	assert.is(payto.amount, '10');
+	assert.is(payto.fiat, 'eur');
+});
+
 test.run();
