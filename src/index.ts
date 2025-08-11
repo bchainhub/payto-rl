@@ -21,6 +21,7 @@ export type PaytoJSON = {
 	lang?: string | null;
 	location?: string | null;
 	message?: string | null;
+	mode?: string | null;
 	network?: string;
 	organization?: string | null;
 	origin?: string | null;
@@ -50,7 +51,7 @@ class Payto {
 	private static readonly EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 	/** Validates geographic coordinates */
-	private static readonly GEO_LOCATION_REGEX = /^(\+|-)?(?:90(?:\.0{1,6})?|(?:[0-9]|[1-8][0-9])(?:\.[0-9]{1,6})?),(\+|-)?(?:180(?:\.0{1,6})?|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:\.[0-9]{1,6})?)$/;
+	private static readonly GEO_LOCATION_REGEX = /^(\+|-)?(?:90(?:\.0{1,9})?|(?:[0-9]|[1-8][0-9])(?:\.[0-9]{1,9})?),(\+|-)?(?:180(?:\.0{1,9})?|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:\.[0-9]{1,9})?)$/;
 
 	/** Validates IBAN */
 	private static readonly IBAN_REGEX = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{12,30}$/i;
@@ -922,6 +923,20 @@ class Payto {
 		}
 	}
 
+	/** Gets preferred mode of Pass */
+	get mode(): string | null {
+		return this.searchParams.get('mode')?.toLowerCase() || null;
+	}
+
+	/** Sets preferred mode of Pass */
+	set mode(value: string | null) {
+		if (value) {
+			this.searchParams.set('mode', value.toLowerCase());
+		} else {
+			this.searchParams.delete('mode');
+		}
+	}
+
 	/** Converts to URL string */
 	toString(): string {
 		return this.url.toString();
@@ -968,6 +983,7 @@ class Payto {
 		if (this.lang) obj.lang = this.lang;
 		if (this.location) obj.location = this.location;
 		if (this.message) obj.message = this.message;
+		if (this.mode) obj.mode = this.mode;
 		if (this.network) obj.network = this.network;
 		if (this.organization) obj.organization = this.organization;
 		if (this.receiverName) obj.receiverName = this.receiverName;

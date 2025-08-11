@@ -114,6 +114,15 @@ test('get and set location with geo coordinates', () => {
 	const payto = new Payto('payto://void/geo');
 	payto.location = '51.5074,0.1278';
 	assert.is(payto.location, '51.5074,0.1278');
+
+	// Test coordinates with 9 decimal places
+	payto.location = '51.507400000,0.127800000';
+	assert.is(payto.location, '51.507400000,0.127800000');
+
+	// Test coordinates with mixed decimal places
+	payto.location = '40.712800000,-74.006000000';
+	assert.is(payto.location, '40.712800000,-74.006000000');
+
 	assert.throws(() => {
 		payto.location = '91.0000,0.1278'; // Invalid latitude
 	}, /Invalid geo location format/);
@@ -467,6 +476,53 @@ test('handle RTL and donate flags', () => {
 	assert.is(payto.donate, true);
 	payto.donate = null;
 	assert.is(payto.donate, null);
+});
+
+test('get and set mode', () => {
+	const payto = new Payto('payto://xcb/address?mode=nfc');
+	assert.is(payto.mode, 'nfc');
+	payto.mode = 'qr';
+	assert.is(payto.mode, 'qr');
+	payto.mode = 'NFC';
+	assert.is(payto.mode, 'nfc');
+	payto.mode = null;
+	assert.is(payto.mode, null);
+});
+
+test('mode case handling', () => {
+	const payto = new Payto('payto://xcb/address');
+
+	// Test case conversion
+	payto.mode = 'NFC';
+	assert.is(payto.mode, 'nfc');
+
+	payto.mode = 'QR';
+	assert.is(payto.mode, 'qr');
+
+	payto.mode = 'Bluetooth';
+	assert.is(payto.mode, 'bluetooth');
+});
+
+test('mode in toJSONObject', () => {
+	const payto = new Payto('payto://xcb/address?mode=nfc');
+	const json = payto.toJSONObject();
+	assert.is(json.mode, 'nfc');
+
+	payto.mode = null;
+	const jsonWithoutMode = payto.toJSONObject();
+	assert.is(jsonWithoutMode.mode, undefined);
+});
+
+test('mode with other parameters', () => {
+	const payto = new Payto('payto://xcb/address?amount=10&mode=nfc&fiat=eur');
+	assert.is(payto.mode, 'nfc');
+	assert.is(payto.amount, '10');
+	assert.is(payto.fiat, 'eur');
+
+	payto.mode = 'qr';
+	assert.is(payto.mode, 'qr');
+	assert.is(payto.amount, '10');
+	assert.is(payto.fiat, 'eur');
 });
 
 test('handle path parts operations', () => {
