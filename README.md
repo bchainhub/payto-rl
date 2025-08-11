@@ -157,6 +157,7 @@ Creates a new Payto instance from a payto URL string.
 | `lang` | `string \| null` | Language/locale code (2-letter language code, e.g., 'en', 'en-US', 'en-us', 'fr-CA') |
 | `location` | `string \| null` | Location data (format depends on void type) |
 | `message` | `string \| null` | Payment message |
+| `mode` | `string \| null` | Preferred mode of Pass (e.g., 'qr', 'nfc') |
 | `network` | `string` | Network identifier (case-insensitive) |
 | `organization` | `string \| null` | Organization name (maximum 25 characters) |
 | `origin` | `string \| null` | URL origin |
@@ -192,7 +193,7 @@ The library includes TypeScript type definitions and runtime validation for:
 - Routing numbers (9 digits)
 - Account numbers (7-14 digits)
 - Email addresses (for UPI/PIX, case-insensitive)
-- Geographic coordinates
+- Geographic coordinates (up to 9 decimal places)
 - Plus codes
 - Unix timestamps
 - Barcode formats
