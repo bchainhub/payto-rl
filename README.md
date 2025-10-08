@@ -94,6 +94,19 @@ console.log(bankPayto.bic);           // 'DEUTDEFF500'
 bankPayto.routingNumber = 123456789;  // Valid 9-digit routing number
 console.log(bankPayto.routingNumber); // 123456789
 
+// INTRA transfer example (intra-bank transfers)
+const intraPayto = new Payto('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631?amount=usd:20');
+console.log(intraPayto.bic);           // 'PINGCHB2'
+console.log(intraPayto.accountNumber); // 'cb1958b39698a44bdae37f881e68dce073823a48a631'
+console.log(intraPayto.amount);        // 'usd:20'
+console.log(intraPayto.value);         // 20
+
+// Mode example (preferred interaction mode)
+const modePayto = new Payto('payto://xcb/address?mode=nfc');
+console.log(modePayto.mode);          // 'nfc'
+modePayto.mode = 'qr';
+console.log(modePayto.mode);          // 'qr'
+
 // Language/locale example
 const langPayto = new Payto('payto://xcb/address?lang=en-US');
 console.log(langPayto.lang);          // 'en-us'
@@ -136,7 +149,7 @@ Creates a new Payto instance from a payto URL string.
 | Property | Type | Description |
 |----------|------|-------------|
 | `accountAlias` | `string \| null` | Email address for UPI/PIX payments (case-insensitive) |
-| `accountNumber` | `number \| null` | Account number (7-14 digits) for ACH payments |
+| `accountNumber` | `number \| string \| null` | Account number (7-14 digits for ACH, alphanumeric for INTRA) |
 | `address` | `string \| null` | Payment address |
 | `amount` | `string \| null` | Payment amount with optional currency prefix |
 | `asset` | `string \| null` | Asset type or contract address |
@@ -223,6 +236,18 @@ Email-based payment identifiers (case-insensitive):
 
 - `payto://upi/email@example.com`
 - `payto://pix/email@example.com`
+
+### INTRA Transfers
+
+Intra-bank transfers with BIC and flexible account numbers:
+
+- `payto://intra/bic/account` (BIC and alphanumeric account number)
+
+Example: `payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631?amount=usd:20`
+
+- BIC is validated and converted to uppercase
+- Account numbers can be alphanumeric strings (no length restriction)
+- Supports all standard payment parameters (amount, message, etc.)
 
 ## License
 
