@@ -772,4 +772,120 @@ test('lang with other parameters', () => {
 	assert.is(payto.fiat, 'eur');
 });
 
+test('INTRA transfer - get BIC and account number', () => {
+	const payto = new Payto('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631?amount=usd:20');
+	assert.is(payto.bic, 'PINGCHB2');
+	assert.is(payto.accountNumber, 'cb1958b39698a44bdae37f881e68dce073823a48a631');
+	assert.is(payto.amount, 'usd:20');
+	assert.is(payto.hostname, 'intra');
+});
+
+test('INTRA transfer - set BIC and account number', () => {
+	const payto = new Payto('payto://intra/deutdeff/account123');
+	assert.is(payto.bic, 'DEUTDEFF');
+	assert.is(payto.accountNumber, 'account123');
+
+	// Update BIC
+	payto.bic = 'sogefrpp';
+	assert.is(payto.bic, 'SOGEFRPP');
+
+	// Update account number
+	payto.accountNumber = 'newaccount456';
+	assert.is(payto.accountNumber, 'newaccount456');
+});
+
+test('INTRA transfer - alphanumeric account numbers', () => {
+	const payto = new Payto('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631');
+
+	// INTRA should accept alphanumeric account numbers
+	assert.is(payto.accountNumber, 'cb1958b39698a44bdae37f881e68dce073823a48a631');
+
+	// Test setting various account number formats
+	payto.accountNumber = 'abc123xyz';
+	assert.is(payto.accountNumber, 'abc123xyz');
+
+	payto.accountNumber = '1234567890';
+	assert.is(payto.accountNumber, '1234567890');
+
+	payto.accountNumber = 'ACCOUNT-WITH-DASHES';
+	assert.is(payto.accountNumber, 'ACCOUNT-WITH-DASHES');
+});
+
+test('INTRA transfer - with amount and currency', () => {
+	const payto = new Payto('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631?amount=usd:20');
+	assert.equal(payto.currency, ['usd', null]);
+	assert.is(payto.value, 20);
+	assert.is(payto.asset, 'usd');
+
+	// Update amount
+	payto.value = 50;
+	assert.is(payto.amount, 'usd:50');
+	assert.is(payto.value, 50);
+});
+
+test('INTRA transfer - toJSONObject', () => {
+	const payto = new Payto('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631?amount=usd:20');
+	const json = payto.toJSONObject();
+
+	assert.is(json.hostname, 'intra');
+	assert.is(json.bic, 'PINGCHB2');
+	assert.is(json.accountNumber, 'cb1958b39698a44bdae37f881e68dce073823a48a631');
+	assert.is(json.amount, 'usd:20');
+	assert.is(json.value, 20);
+	assert.equal(json.currency, ['usd', null]);
+});
+
+test('INTRA transfer - invalid BIC format', () => {
+	const payto = new Payto('payto://intra/validbic/account123');
+
+	assert.throws(() => {
+		payto.bic = 'INVALID';
+	}, /Invalid BIC format/);
+});
+
+test('INTRA transfer - account number variations', () => {
+	const payto = new Payto('payto://intra/deutdeff/acc1');
+
+	// Test short account number
+	payto.accountNumber = 'a1';
+	assert.is(payto.accountNumber, 'a1');
+
+	// Test long account number
+	payto.accountNumber = 'verylongaccountnumber1234567890abcdefghijklmnop';
+	assert.is(payto.accountNumber, 'verylongaccountnumber1234567890abcdefghijklmnop');
+
+	// Test null account number
+	payto.accountNumber = null;
+	assert.is(payto.accountNumber, null);
+});
+
+test('INTRA transfer - setting account number with wrong hostname', () => {
+	const payto = new Payto('payto://xcb/address');
+
+	assert.throws(() => {
+		payto.accountNumber = 'account123';
+	}, /Invalid hostname, must be ach or intra/);
+});
+
+test('INTRA transfer - complete example', () => {
+	// Create a complete INTRA transfer
+	const payto = new Payto('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631');
+
+	// Set payment details
+	payto.amount = 'usd:20';
+	payto.message = 'Transfer to savings';
+	payto.receiverName = 'John Doe';
+
+	// Verify all properties
+	assert.is(payto.bic, 'PINGCHB2');
+	assert.is(payto.accountNumber, 'cb1958b39698a44bdae37f881e68dce073823a48a631');
+	assert.is(payto.amount, 'usd:20');
+	assert.is(payto.value, 20);
+	assert.is(payto.message, 'Transfer to savings');
+	assert.is(payto.receiverName, 'John Doe');
+
+	// Verify the URL string
+	assert.ok(payto.toString().includes('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631'));
+});
+
 test.run();

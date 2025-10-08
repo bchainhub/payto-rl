@@ -1,6 +1,6 @@
 export type PaytoJSON = {
 	accountAlias?: string | null;
-	accountNumber?: number | null;
+	accountNumber?: number | string | null;
 	address?: string | null;
 	amount?: string | null;
 	asset?: string | null;
@@ -130,30 +130,34 @@ class Payto {
 		}
 	}
 
-	/** Gets account number for ACH payments */
-	get accountNumber(): number | null {
+	/** Gets account number for ACH or INTRA payments */
+	get accountNumber(): number | string | null {
 		if (this.hostname === 'ach') {
 			const parts = this.pathname.split('/');
 			const accountStr = parts.length > 2 ? parts[2] : parts[1];
 			if (accountStr && Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
 				return parseInt(accountStr, 10);
 			}
+		} else if (this.hostname === 'intra') {
+			const parts = this.pathname.split('/');
+			const accountStr = parts.length > 2 ? parts[2] : parts[1];
+			return accountStr && accountStr.length > 0 ? accountStr : null;
 		}
 		return null;
 	}
 
 	/**
-	 * Sets account number for ACH payments
+	 * Sets account number for ACH or INTRA payments
 	 * @throws Error if format invalid or wrong hostname
 	 */
-	set accountNumber(value: number | null) {
-		if (!this.hostname || this.hostname !== 'ach') {
-			throw new Error('Invalid hostname, must be ach');
+	set accountNumber(value: number | string | null) {
+		if (!this.hostname || (this.hostname !== 'ach' && this.hostname !== 'intra')) {
+			throw new Error('Invalid hostname, must be ach or intra');
 		}
 
 		if (value !== null) {
 			const accountStr = value.toString();
-			if (!Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
+			if (this.hostname === 'ach' && !Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
 				throw new Error('Invalid account number format');
 			}
 		}
@@ -228,6 +232,8 @@ class Payto {
 	get bic(): string | null {
 		if (this.hostname === 'bic') {
 			return this.getHostpathParts('bic', 1)?.toUpperCase() ?? null;
+		} else if (this.hostname === 'intra') {
+			return this.getHostpathParts('intra', 1)?.toUpperCase() ?? null;
 		} else if (this.hostname === 'iban') {
 			if (this.pathname.length > 2) {
 				return this.getHostpathParts('iban', 1)?.toUpperCase() ?? null;
@@ -244,7 +250,7 @@ class Payto {
 		if (value && !Payto.BIC_REGEX.test(value)) {
 			throw new Error('Invalid BIC format');
 		}
-		if (this.hostname === 'bic') {
+		if (this.hostname === 'bic' || this.hostname === 'intra') {
 			this.setPathParts(value?.toUpperCase() ?? null, 1);
 		} else if (this.hostname === 'iban') {
 			if (this.pathname.length > 2) {
