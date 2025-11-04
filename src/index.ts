@@ -57,7 +57,7 @@ class Payto {
 	private static readonly IBAN_REGEX = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{12,30}$/i;
 
 	/** Validates language/locale codes (e.g., 'en', 'en-US', 'en-us', 'fr-CA') */
-	private static readonly LANG_REGEX = /^[a-z]{2}(-[a-zA-Z]{2})?$/;
+	private static readonly LANG_REGEX = /^[a-z]{2}(-[a-z]{2}|-[A-Z]{2})?$/;
 
 	/** Validates Plus codes - only long format is supported */
 	private static readonly PLUS_CODE_REGEX = /^[23456789CFGHJMPQRVWX]{8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
@@ -216,7 +216,7 @@ class Payto {
 
 	/** Gets barcode format */
 	get barcode(): string | null {
-		return this.searchParams.get('barcode')?.toLowerCase() || null;
+		return this.searchParams.get('barcode')?.toLowerCase() ?? null;
 	}
 
 	/** Sets barcode format */
@@ -269,7 +269,7 @@ class Payto {
 
 	/** Gets background color in hex format */
 	get colorBackground(): string | null {
-		return this.searchParams.get('color-b')?.toLowerCase() || null;
+		return this.searchParams.get('color-b')?.toLowerCase() ?? null;
 	}
 
 	/**
@@ -286,7 +286,7 @@ class Payto {
 
 	/** Gets foreground color in hex format */
 	get colorForeground(): string | null {
-		return this.searchParams.get('color-f')?.toLowerCase() || null;
+		return this.searchParams.get('color-f')?.toLowerCase() ?? null;
 	}
 
 	/**
@@ -401,7 +401,7 @@ class Payto {
 
 	/** Gets fiat currency code */
 	get fiat(): string | null {
-		return this.searchParams.get('fiat')?.toLowerCase() || null;
+		return this.searchParams.get('fiat')?.toLowerCase() ?? null;
 	}
 
 	/** Sets fiat currency code */
@@ -702,7 +702,7 @@ class Payto {
 
 	/** Gets recurring payment info */
 	get recurring(): string | null {
-		return this.searchParams.get('rc')?.toLowerCase() || null;
+		return this.searchParams.get('rc')?.toLowerCase() ?? null;
 	}
 
 	/** Sets recurring payment info */
@@ -823,7 +823,7 @@ class Payto {
 
 	/** Gets swap type */
 	get swap(): string | null {
-		return this.searchParams.get('swap')?.toLowerCase() || null;
+		return this.searchParams.get('swap')?.toLowerCase() ?? null;
 	}
 
 	/** Sets swap type */
@@ -911,7 +911,7 @@ class Payto {
 
 	/** Gets language/locale code */
 	get lang(): string | null {
-		return this.searchParams.get('lang')?.toLowerCase() || null;
+		return this.searchParams.get('lang') ?? null;
 	}
 
 	/**
@@ -921,9 +921,9 @@ class Payto {
 	set lang(value: string | null) {
 		if (value) {
 			if (!Payto.LANG_REGEX.test(value)) {
-				throw new Error('Invalid language format. Must be a valid 2-letter language code (e.g., "en", "en-US", "en-us", "fr-CA").');
+				throw new Error('Invalid language format.');
 			}
-			this.searchParams.set('lang', value.toLowerCase());
+			this.searchParams.set('lang', value);
 		} else {
 			this.searchParams.delete('lang');
 		}
@@ -931,7 +931,7 @@ class Payto {
 
 	/** Gets preferred mode of Pass */
 	get mode(): string | null {
-		return this.searchParams.get('mode')?.toLowerCase() || null;
+		return this.searchParams.get('mode')?.toLowerCase() ?? null;
 	}
 
 	/** Sets preferred mode of Pass */
