@@ -109,14 +109,14 @@ console.log(modePayto.mode);          // 'qr'
 
 // Language/locale example
 const langPayto = new Payto('payto://xcb/address?lang=en-US');
-console.log(langPayto.lang);          // 'en-us'
+console.log(langPayto.lang);          // 'en-US'
 langPayto.lang = 'fr-CA';
-console.log(langPayto.lang);          // 'fr-ca'
+console.log(langPayto.lang);          // 'fr-CA'
 langPayto.lang = 'es';
 console.log(langPayto.lang);          // 'es'
-// Language codes must be 2-letter language codes, with optional region (2 letters, case-insensitive)
+// Language codes must be 2-letter lowercase language codes, with optional region (2 letters, all lowercase or all uppercase)
 // Valid: 'en', 'es', 'en-US', 'en-us', 'fr-CA', 'fr-ca', 'zh-CN'
-// Invalid: 'EN', 'EN-US', 'invalid', 'eng', 'fra'
+// Invalid: 'EN', 'EN-US', 'en-Us', 'fr-Ca', 'invalid', 'eng', 'fra'
 
 // Value handling examples
 const numericPayto = new Payto('payto://example/address?amount=10.5');
@@ -167,7 +167,7 @@ Creates a new Payto instance from a payto URL string.
 | `href` | `string` | Complete URL string |
 | `iban` | `string \| null` | International Bank Account Number (case-insensitive) |
 | `item` | `string \| null` | Item description (maximum 40 characters) |
-| `lang` | `string \| null` | Language/locale code (2-letter language code, e.g., 'en', 'en-US', 'en-us', 'fr-CA') |
+| `lang` | `string \| null` | Language/locale code (2-letter lowercase language code with optional region: all lowercase or all uppercase, e.g., 'en', 'en-US', 'en-us', 'fr-CA') |
 | `location` | `string \| null` | Location data (format depends on void type) |
 | `message` | `string \| null` | Payment message |
 | `mode` | `string \| null` | Preferred mode of Pass (e.g., 'qr', 'nfc') |
@@ -212,7 +212,7 @@ The library includes TypeScript type definitions and runtime validation for:
 - Barcode formats
 - IBAN format (case-insensitive)
 - Color formats (6-character hex)
-- Language/locale codes (2-letter language codes with optional region codes, case-insensitive)
+- Language/locale codes (2-letter lowercase language codes with optional region codes: region must be all lowercase or all uppercase, mixed case rejected)
 
 ## Payment System Support
 

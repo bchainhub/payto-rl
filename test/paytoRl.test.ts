@@ -635,9 +635,9 @@ test('get and set lang', () => {
 	payto.lang = 'fr';
 	assert.is(payto.lang, 'fr');
 	payto.lang = 'en-US';
-	assert.is(payto.lang, 'en-us');
+	assert.is(payto.lang, 'en-US');
 	payto.lang = 'fr-CA';
-	assert.is(payto.lang, 'fr-ca');
+	assert.is(payto.lang, 'fr-CA');
 	payto.lang = null;
 	assert.is(payto.lang, null);
 });
@@ -653,35 +653,28 @@ test('lang validation - valid formats', () => {
 	assert.is(payto.lang, 'es');
 
 	payto.lang = 'en-US';
-	assert.is(payto.lang, 'en-us');
+	assert.is(payto.lang, 'en-US');
 
 	payto.lang = 'en-us';
 	assert.is(payto.lang, 'en-us');
 
 	payto.lang = 'fr-CA';
-	assert.is(payto.lang, 'fr-ca');
+	assert.is(payto.lang, 'fr-CA');
 
 	payto.lang = 'fr-ca';
 	assert.is(payto.lang, 'fr-ca');
 
 	payto.lang = 'zh-CN';
-	assert.is(payto.lang, 'zh-cn');
+	assert.is(payto.lang, 'zh-CN');
 
 	payto.lang = 'zh-cn';
 	assert.is(payto.lang, 'zh-cn');
 
 	payto.lang = 'pt-BR';
-	assert.is(payto.lang, 'pt-br');
+	assert.is(payto.lang, 'pt-BR');
 
 	payto.lang = 'pt-br';
 	assert.is(payto.lang, 'pt-br');
-
-	// Test mixed case region codes
-	payto.lang = 'en-Us';
-	assert.is(payto.lang, 'en-us');
-
-	payto.lang = 'fr-Ca';
-	assert.is(payto.lang, 'fr-ca');
 });
 
 test('lang validation - invalid formats', () => {
@@ -728,14 +721,23 @@ test('lang validation - invalid formats', () => {
 	assert.throws(() => {
 		payto.lang = 'spa';
 	}, /Invalid language format/);
+
+	// Test mixed case region codes (should be invalid)
+	assert.throws(() => {
+		payto.lang = 'en-Us';
+	}, /Invalid language format/);
+
+	assert.throws(() => {
+		payto.lang = 'fr-Ca';
+	}, /Invalid language format/);
 });
 
 test('lang case handling', () => {
 	const payto = new Payto('payto://xcb/address?lang=en-US');
-	assert.is(payto.lang, 'en-us');
+	assert.is(payto.lang, 'en-US');
 
 	payto.lang = 'fr-CA';
-	assert.is(payto.lang, 'fr-ca');
+	assert.is(payto.lang, 'fr-CA');
 
 	payto.lang = 'en-us';
 	assert.is(payto.lang, 'en-us');
@@ -753,7 +755,7 @@ test('lang case handling', () => {
 test('lang in toJSONObject', () => {
 	const payto = new Payto('payto://xcb/address?lang=en-US');
 	const json = payto.toJSONObject();
-	assert.is(json.lang, 'en-us');
+	assert.is(json.lang, 'en-US');
 
 	payto.lang = null;
 	const jsonWithoutLang = payto.toJSONObject();
