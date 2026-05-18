@@ -1,5 +1,6 @@
 export type PaytoJSON = {
 	accountAlias?: string | null;
+	accountId?: string | null;
 	accountNumber?: number | string | null;
 	address?: string | null;
 	amount?: string | null;
@@ -130,7 +131,7 @@ class Payto {
 		}
 	}
 
-	/** Gets account number for ACH or INTRA payments */
+	/** Gets account number for ACH, BIC, or INTRA payments */
 	get accountNumber(): number | string | null {
 		if (this.hostname === 'ach') {
 			const parts = this.pathname.split('/');
@@ -138,6 +139,10 @@ class Payto {
 			if (accountStr && Payto.ACCOUNT_NUMBER_REGEX.test(accountStr)) {
 				return parseInt(accountStr, 10);
 			}
+		} else if (this.hostname === 'bic') {
+			const parts = this.pathname.split('/');
+			const accountStr = parts.length > 2 ? parts[2] : null;
+			return accountStr && accountStr.length > 0 ? accountStr : null;
 		} else if (this.hostname === 'intra') {
 			const parts = this.pathname.split('/');
 			const accountStr = parts.length > 2 ? parts[2] : parts[1];
@@ -147,12 +152,12 @@ class Payto {
 	}
 
 	/**
-	 * Sets account number for ACH or INTRA payments
+	 * Sets account number for ACH, BIC, or INTRA payments
 	 * @throws Error if format invalid or wrong hostname
 	 */
 	set accountNumber(value: number | string | null) {
-		if (!this.hostname || (this.hostname !== 'ach' && this.hostname !== 'intra')) {
-			throw new Error('Invalid hostname, must be ach or intra');
+		if (!this.hostname || (this.hostname !== 'ach' && this.hostname !== 'bic' && this.hostname !== 'intra')) {
+			throw new Error('Invalid hostname, must be ach, bic or intra');
 		}
 
 		if (value !== null) {
@@ -166,13 +171,42 @@ class Payto {
 		if (parts.length > 2) {
 			if (!value) {
 				this.setPathParts(null, 2);
-				this.setPathParts(null, 1);
+				if (this.hostname !== 'bic') {
+					this.setPathParts(null, 1);
+				}
 			} else {
 				this.setPathParts(value?.toString() ?? null, 2);
 			}
 		} else if (parts.length > 1) {
-			this.setPathParts(value?.toString() ?? null, 1);
+			if (this.hostname === 'bic') {
+				const bicStr = this.getHostpathParts('bic', 1);
+				if (bicStr) {
+					this.setPathParts(bicStr, 1);
+					this.setPathParts(value?.toString() ?? null, 2);
+				}
+			} else {
+				this.setPathParts(value?.toString() ?? null, 1);
+			}
 		}
+	}
+
+	/** Gets account identifier for BIC or INTRA payments */
+	get accountId(): string | null {
+		if (this.hostname === 'bic' || this.hostname === 'intra') {
+			return this.accountNumber?.toString() ?? null;
+		}
+		return null;
+	}
+
+	/**
+	 * Sets account identifier for BIC or INTRA payments
+	 * @throws Error if hostname is not bic or intra
+	 */
+	set accountId(value: string | null) {
+		if (this.hostname !== 'bic' && this.hostname !== 'intra') {
+			throw new Error('Invalid hostname, must be bic or intra');
+		}
+		this.accountNumber = value;
 	}
 
 	/** Gets payment address */
@@ -971,6 +1005,7 @@ class Payto {
 
 		// PayTo-specific properties
 		if (this.accountAlias) obj.accountAlias = this.accountAlias;
+		if (this.accountId) obj.accountId = this.accountId;
 		if (this.accountNumber) obj.accountNumber = this.accountNumber;
 		if (this.address) obj.address = this.address;
 		if (this.amount) obj.amount = this.amount;
