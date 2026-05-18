@@ -6,7 +6,7 @@ on:
 
 permissions:
   id-token: write
-  contents: write
+  contents: read
 
 jobs:
   build-and-publish:
@@ -20,8 +20,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
 
       - name: Install Dependencies
         run: npm i
@@ -29,7 +30,8 @@ jobs:
       - name: Build Project
         run: npm run build
 
+      - name: Run Tests
+        run: npm test
+
       - name: Publish package on NPM 📦
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
