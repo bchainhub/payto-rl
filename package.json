@@ -7,6 +7,9 @@
   "type": "module",
   "private": false,
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "npm run build && node --no-deprecation --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ./node_modules/uvu/bin.js test",
     "test:coverage": "c8 npm test",
@@ -15,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bchainhub/payto-rl"
+    "url": "git+https://github.com/bchainhub/payto-rl.git"
   },
   "files": [
     "dist/",
