@@ -91,8 +91,9 @@ console.log(plusPayto.location); // '8FVC9G8V+R9'
 // Bank details example (case-insensitive BIC)
 const bankPayto = new Payto('payto://bic/deutdeff500');
 console.log(bankPayto.bic);           // 'DEUTDEFF500'
-bankPayto.routingNumber = 123456789;  // Valid 9-digit routing number
-console.log(bankPayto.routingNumber); // 123456789
+bankPayto.accountId = 'cb1958b39698a44bdae37f881e68dce073823a48a631';
+console.log(bankPayto.accountId);     // 'cb1958b39698a44bdae37f881e68dce073823a48a631'
+console.log(bankPayto.toString());    // 'payto://bic/DEUTDEFF500/cb1958b39698a44bdae37f881e68dce073823a48a631'
 
 // INTRA transfer example (intra-bank transfers)
 const intraPayto = new Payto('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631?amount=usd:20');
@@ -149,6 +150,7 @@ Creates a new Payto instance from a payto URL string.
 | Property | Type | Description |
 |----------|------|-------------|
 | `accountAlias` | `string \| null` | Email address for UPI/PIX payments (case-insensitive) |
+| `accountId` | `string \| null` | Account identifier for `bic` and `intra` payments |
 | `accountNumber` | `number \| string \| null` | Account number (7-14 digits for ACH, alphanumeric for INTRA) |
 | `address` | `string \| null` | Payment address |
 | `amount` | `string \| null` | Payment amount with optional currency prefix |
@@ -215,6 +217,19 @@ The library includes TypeScript type definitions and runtime validation for:
 - Language/locale codes (2-letter lowercase language codes with optional region codes: region must be all lowercase or all uppercase, mixed case rejected)
 
 ## Payment System Support
+
+### BIC Payments
+
+Supports two formats (case-insensitive BIC):
+
+- `payto://bic/bic`
+- `payto://bic/bic/account-id`
+
+Example: `payto://bic/deutdeff500/cb1958b39698a44bdae37f881e68dce073823a48a631`
+
+- BIC is validated and converted to uppercase
+- Optional account IDs are exposed as both `accountId` and `accountNumber`
+- Useful for attaching a beneficiary account or CORE ID directly to the BIC route
 
 ### IBAN
 

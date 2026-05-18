@@ -244,6 +244,31 @@ test('get and set account number for ACH', () => {
 	assert.is(payto.accountNumber, null);
 });
 
+test('get and set account id for BIC', () => {
+	const payto = new Payto('payto://bic/deutdeff500/cb1958b39698a44bdae37f881e68dce073823a48a631');
+	assert.is(payto.bic, 'DEUTDEFF500');
+	assert.is(payto.accountId, 'cb1958b39698a44bdae37f881e68dce073823a48a631');
+	assert.is(payto.accountNumber, 'cb1958b39698a44bdae37f881e68dce073823a48a631');
+	payto.accountId = 'ce1958b39698a44bdae37f881e68dce073823a48a631';
+	assert.is(payto.toString(), 'payto://bic/deutdeff500/ce1958b39698a44bdae37f881e68dce073823a48a631');
+	assert.is(payto.accountId, 'ce1958b39698a44bdae37f881e68dce073823a48a631');
+});
+
+test('clearing BIC account id preserves BIC path', () => {
+	const payto = new Payto('payto://bic/deutdeff500/cb1958b39698a44bdae37f881e68dce073823a48a631');
+	payto.accountId = null;
+	assert.is(payto.toString(), 'payto://bic/deutdeff500');
+	assert.is(payto.accountId, null);
+});
+
+test('toJSONObject includes BIC account id', () => {
+	const payto = new Payto('payto://bic/deutdeff500/cb1958b39698a44bdae37f881e68dce073823a48a631');
+	const json = payto.toJSONObject();
+	assert.is(json.accountId, 'cb1958b39698a44bdae37f881e68dce073823a48a631');
+	assert.is(json.accountNumber, 'cb1958b39698a44bdae37f881e68dce073823a48a631');
+	assert.is(json.bic, 'DEUTDEFF500');
+});
+
 test('get and set IBAN', () => {
 	const payto = new Payto('payto://iban/ABC');
 	payto.iban = 'DE89370400440532013000';
@@ -424,7 +449,7 @@ test('handle ACH operations', () => {
 	const paytoInvalid = new Payto('payto://invalid/123456789');
 	assert.throws(() => {
 		paytoInvalid.accountNumber = 1234567;
-	}, /Invalid hostname, must be ach/);
+	}, /Invalid hostname, must be ach, bic or intra/);
 });
 
 test('handle currency operations', () => {
@@ -626,7 +651,7 @@ test('Payto - Error handling and edge cases', () => {
     const wrongHostPayto = new Payto('payto://example');
     assert.throws(() => {
         wrongHostPayto.accountNumber = 123456789;
-    }, /Invalid hostname, must be ach/);
+    }, /Invalid hostname, must be ach, bic or intra/);
 });
 
 test('get and set lang', () => {
@@ -866,7 +891,7 @@ test('INTRA transfer - setting account number with wrong hostname', () => {
 
 	assert.throws(() => {
 		payto.accountNumber = 'account123';
-	}, /Invalid hostname, must be ach or intra/);
+	}, /Invalid hostname, must be ach, bic or intra/);
 });
 
 test('INTRA transfer - complete example', () => {
