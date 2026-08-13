@@ -29,6 +29,23 @@ test('get and set amount', () => {
 	assert.is(payto.amount, 'ctn:20.02');
 });
 
+test('get and set receipt destination', () => {
+	const payto = new Payto('payto://xcb/address?receipt=payments%40example.com');
+	assert.is(payto.receipt, 'payments@example.com');
+	assert.is(payto.toJSONObject().receipt, 'payments@example.com');
+
+	payto.receipt = '+421 900 123 456';
+	assert.is(payto.receipt, '+421900123456');
+	assert.ok(payto.href.includes('receipt=%2B421900123456'));
+
+	payto.receipt = '   ';
+	assert.is(payto.receipt, null);
+
+	payto.receipt = null;
+	assert.is(payto.receipt, null);
+	assert.not.ok(payto.toJSONObject().hasOwnProperty('receipt'));
+});
+
 test('get and set currency', () => {
 	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur');
 	assert.equal(payto.currency, ['ctn', 'eur']);
