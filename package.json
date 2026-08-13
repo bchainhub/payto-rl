@@ -11,10 +11,10 @@
     "access": "public"
   },
   "scripts": {
-    "test": "npm run build && node --no-deprecation --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ./node_modules/uvu/bin.js test",
+    "test": "npm run build && tsx ./node_modules/uvu/bin.js test",
     "test:coverage": "c8 npm test",
     "build": "tsc --declaration --declarationDir ./dist",
-    "dev": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --inspect src/index.ts"
+    "dev": "tsx --inspect src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -54,7 +54,7 @@
     "@types/node": "^26.2.0",
     "c8": "^12.0.0",
     "esm": "^3.2.25",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "uvu": "^0.5.6"
   }
