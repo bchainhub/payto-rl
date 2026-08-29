@@ -29,21 +29,21 @@ test('get and set amount', () => {
 	assert.is(payto.amount, 'ctn:20.02');
 });
 
-test('get and set receipt destination', () => {
-	const payto = new Payto('payto://xcb/address?receipt=payments%40example.com');
-	assert.is(payto.receipt, 'payments@example.com');
-	assert.is(payto.toJSONObject().receipt, 'payments@example.com');
+test('get and set contact destination', () => {
+	const payto = new Payto('payto://xcb/address?contact=payments%40example.com');
+	assert.is(payto.contact, 'payments@example.com');
+	assert.is(payto.toJSONObject().contact, 'payments@example.com');
 
-	payto.receipt = '+421 900 123 456';
-	assert.is(payto.receipt, '+421900123456');
-	assert.ok(payto.href.includes('receipt=%2B421900123456'));
+	payto.contact = '+421 900 123 456';
+	assert.is(payto.contact, '+421900123456');
+	assert.ok(payto.href.includes('contact=%2B421900123456'));
 
-	payto.receipt = '   ';
-	assert.is(payto.receipt, null);
+	payto.contact = '   ';
+	assert.is(payto.contact, null);
 
-	payto.receipt = null;
-	assert.is(payto.receipt, null);
-	assert.not.ok(payto.toJSONObject().hasOwnProperty('receipt'));
+	payto.contact = null;
+	assert.is(payto.contact, null);
+	assert.not.ok(payto.toJSONObject().hasOwnProperty('contact'));
 });
 
 test('get and set currency', () => {
