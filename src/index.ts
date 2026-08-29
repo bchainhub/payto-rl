@@ -31,7 +31,7 @@ export type PaytoJSON = {
 	port?: string;
 	protocol?: string;
 	receiverName?: string | null;
-	receipt?: string | null;
+	contact?: string | null;
 	recurring?: string | null;
 	routingNumber?: number | null;
 	rtl?: boolean | null;
@@ -736,17 +736,17 @@ class Payto {
 	}
 
 	/** Gets the destination for payment receipts (for example, an email address or phone number) */
-	get receipt(): string | null {
-		return this.searchParams.get('receipt')?.replaceAll(' ', '') || null;
+	get contact(): string | null {
+		return this.searchParams.get('contact')?.replaceAll(' ', '') || null;
 	}
 
 	/** Sets the destination for payment receipts */
-	set receipt(value: string | null) {
+	set contact(value: string | null) {
 		const normalizedValue = value?.replaceAll(' ', '');
 		if (normalizedValue) {
-			this.searchParams.set('receipt', normalizedValue);
+			this.searchParams.set('contact', normalizedValue);
 		} else {
-			this.searchParams.delete('receipt');
+			this.searchParams.delete('contact');
 		}
 	}
 
@@ -1044,7 +1044,7 @@ class Payto {
 		if (this.network) obj.network = this.network;
 		if (this.organization) obj.organization = this.organization;
 		if (this.receiverName) obj.receiverName = this.receiverName;
-		if (this.receipt) obj.receipt = this.receipt;
+		if (this.contact) obj.contact = this.contact;
 		if (this.recurring) obj.recurring = this.recurring;
 		if (this.routingNumber) obj.routingNumber = this.routingNumber;
 		if (this.rtl) obj.rtl = this.rtl;
