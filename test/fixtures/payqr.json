@@ -1,0 +1,175 @@
+{
+	"valid": [
+		{
+			"country": "bn",
+			"scheme": "tarusqr",
+			"identifier": "ABC123",
+			"uri": "payto://qr/bn/ABC123"
+		},
+		{
+			"country": "kh",
+			"scheme": "khqr",
+			"identifier": "john_smith@devb",
+			"uri": "payto://qr/kh/john_smith%40devb"
+		},
+		{
+			"country": "id",
+			"scheme": "qris",
+			"identifier": "ID123456",
+			"uri": "payto://qr/id/ID123456"
+		},
+		{
+			"country": "la",
+			"scheme": "laoqr",
+			"identifier": "ABC123",
+			"uri": "payto://qr/la/ABC123"
+		},
+		{
+			"country": "my",
+			"scheme": "duitnow",
+			"identifier": "MERCHANT01",
+			"uri": "payto://qr/my/MERCHANT01"
+		},
+		{
+			"country": "mm",
+			"scheme": "mmqr",
+			"identifier": "123456789012345",
+			"uri": "payto://qr/mm/123456789012345"
+		},
+		{
+			"country": "ph",
+			"scheme": "qrph",
+			"identifier": "ABC123",
+			"uri": "payto://qr/ph/ABC123"
+		},
+		{
+			"country": "sg",
+			"scheme": "paynow",
+			"identifier": "+6581234567",
+			"uri": "payto://qr/sg/%2B6581234567"
+		},
+		{
+			"country": "th",
+			"scheme": "promptpay",
+			"identifier": "0066812345678",
+			"uri": "payto://qr/th/0066812345678"
+		},
+		{
+			"country": "vn",
+			"scheme": "vietqr",
+			"identifier": "ABC123",
+			"uri": "payto://qr/vn/ABC123"
+		},
+		{
+			"country": "ph",
+			"scheme": "qrph",
+			"identifier": "Demo@Issuer",
+			"uri": "payto://qr/ph/Demo%40Issuer?payment-mode=p2p&qr-type=static"
+		},
+		{
+			"country": "ph",
+			"scheme": "qrph",
+			"identifier": "Demo@Issuer",
+			"uri": "payto://qr/ph/Demo%40Issuer?amount=PHP%3A15.25&payment-mode=p2p&qr-type=dynamic"
+		},
+		{
+			"country": "ph",
+			"scheme": "qrph",
+			"identifier": "Demo@Issuer",
+			"uri": "payto://qr/ph/Demo%40Issuer?payment-mode=p2m&qr-type=static"
+		},
+		{
+			"country": "ph",
+			"scheme": "qrph",
+			"identifier": "Demo@Issuer",
+			"uri": "payto://qr/ph/Demo%40Issuer?amount=PHP%3A15.25&payment-mode=p2m&qr-type=dynamic"
+		},
+		{
+			"country": "id",
+			"scheme": "qris",
+			"identifier": "Demo@Issuer",
+			"uri": "payto://qr/id/Demo%40Issuer?qr-type=static"
+		},
+		{
+			"country": "id",
+			"scheme": "qris",
+			"identifier": "Demo",
+			"uri": "payto://qr/id/Demo?amount=IDR%3A10000000.00&qr-type=dynamic"
+		},
+		{
+			"country": "id",
+			"scheme": "qris",
+			"identifier": "Demo",
+			"uri": "payto://qr/id/Demo?amount=IDR%3A0.01"
+		}
+	],
+	"invalid": [
+		"payto://qr",
+		"payto://qr/",
+		"payto://qr/la",
+		"payto://qr/la/",
+		"payto://qr/zz/ABC",
+		"payto://qr/br/ABC",
+		"payto://qr/LA/../ABC",
+		"payto://qr/la/%2E%2E",
+		"payto://qr/la/https%3A%2F%2Fevil.example",
+		"payto://qr/la/ABC/DEF",
+		"payto://qr/la/A%2FB",
+		"payto://qr/la/%00",
+		"payto://qr/la/%ZZ",
+		"payto://qr/la/%C0%AF",
+		"payto://qr/la/%ED%A0%80",
+		"payto://qr/la/ABC#x",
+		"payto://user@qr/la/ABC",
+		"payto://qr:90/la/ABC",
+		"payto://qr/la/ABC?message=x&message=y",
+		"payto://qr/la/ABC?message=%0A",
+		"payto://qr/la/ABC?message=%FF",
+		"payto://qr/la/ABC?message",
+		"payto://qr/la/ABC?scheme=laoqr",
+		"payto://qr/la/ABC?amount=USD:1",
+		"payto://qr/my/ABC?amount=MYR:-1",
+		"payto://qr/my/ABC?amount=MYR:0",
+		"payto://qr/my/ABC?amount=MYR:01",
+		"payto://qr/my/ABC?amount=MYR:1e3",
+		"payto://qr/my/ABC?amount=USD:1",
+		"payto://qr/my/ABC?amount=MYR:1.234",
+		"payto://qr/kh/name@bank?amount=KHR:1.23",
+		"payto://qr/th/123",
+		"payto://qr/sg/%2B60123456789",
+		"payto://qr/kh/name",
+		"payto://qr/mm/123",
+		"payto://qr/my/a-b",
+		"payto://qr/la/ABC?identifier-type=mobile",
+		"payto://qr/la/ABC?qr-type=bad",
+		"payto://qr/la/ABC%0A",
+		"payto://qr/la/ABC%0D",
+		"payto://qr/la/ABC%20",
+		"payto://qr/ph/",
+		"payto://qr/ph/a%2Fb",
+		"payto://qr/ph/%FF",
+		"payto://qr/ph/a?payment-mode=merchant",
+		"payto://qr/ph/a?payment-mode=p2p&payment-mode=p2m",
+		"payto://qr/ph/a?qr-type=dynamic",
+		"payto://qr/ph/a?receiver-name=%00",
+		"payto://qr/ph/a?identifier-type=mobile",
+		"payto://qr/ph/a?amount=USD:1",
+		"payto://qr/ph/a?amount=PHP:0",
+		"payto://qr/ph/a?amount=PHP:-1",
+		"payto://qr/ph/a?amount=PHP:01",
+		"payto://qr/ph/a?amount=PHP:1e3",
+		"payto://qr/ph/a?amount=PHP:1.234",
+		"payto://qr/ph/a?amount=PHP:NaN",
+		"payto://qr/id/Demo?amount=IDR:10000000.01",
+		"payto://qr/id/Demo?amount=IDR:99999999999",
+		"payto://qr/id/Demo?amount=IDR:1&qr-type=static",
+		"payto://qr/id/Demo?qr-type=dynamic",
+		"payto://qr/id/Demo?amount=USD:1",
+		"payto://qr/id/Demo?amount=IDR:1.001",
+		"payto://qr/id/Demo?amount=IDR:0",
+		"payto://qr/id/Demo?amount=IDR:-1",
+		"payto://qr/id/Demo?amount=IDR:1e3",
+		"payto://qr/id/Demo?qr-type=cpm",
+		"payto://qr/id/Demo?identifier-type=nmid"
+	]
+}
