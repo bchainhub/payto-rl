@@ -287,3 +287,91 @@ If you find this project useful, please consider supporting it:
 - [Litecoin](https://www.blockchain.com/explorer/addresses/ltc/ltc1ql8dvx0wv0nh2vncpt9j3zqefaehsd25cwp7pfx)
 
 List of sponsors: [![GitHub Sponsors](https://img.shields.io/github/sponsors/bchainhub?label=Sponsors&logo=githubsponsors&color=EA4AAA)](https://github.com/sponsors/bchainhub)
+
+## PayQR national/interoperable QR payments
+
+Use `payto://qr/{country}/{identifier}` with lowercase ISO country codes. PayQR is global; **Pay QR** is the website's label. Current mappings are BN tarusQR, KH KHQR, ID QRIS, LA LaoQR, MY DuitNow QR, MM MMQR, PH QR Ph, SG PayNow/SGQR, TH PromptPay/Thai QR and VN VietQR.
+
+See [PayQR URI API, field coverage and validation limits](docs/PAYQR.md). A PayTo URI, national payment payload, QR image and payment-network connection are separate things. Generating a syntactically valid QR does not imply participation in or authorization to acquire transactions from a payment network. Unsupported national profiles fail closed.
+
+PayQR support encodes/decodes URI and structured payment data only. National QR payload generation and rendering are owned by the PayTo website.
+
+### Philippine QR Ph payment data
+
+Canonical destination: `payto://qr/ph/{identifier}`; network `qr`, country `ph`, scheme `qrph`.
+The identifier is an opaque issuer-provided value, not a verified bank account, mobile number or merchant ID.
+The existing generic target stores optional `payment-mode=p2p|p2m` and `qr-type=static|dynamic` in its parameters.
+`Payto.paymentMode` and `Payto.qrType` expose validated getters/setters and JSON object properties.
+`payment-mode` is a PayTo extension; `mode` remains the existing pass presentation property.
+
+Example (illustrative URI, not an official payment destination or native test vector):
+
+```text
+payto://qr/ph/Demo%40Issuer?amount=PHP%3A15.25&payment-mode=p2m&qr-type=dynamic&reference=Bill%201
+```
+
+PHP amounts use positive decimal strings with at most two decimal places and the existing 13-character amount limit. No floating-point conversion is used by the QR URI codec. Dynamic requests require an amount in this supported PayTo profile. Static data does not imply a recurring debit mandate. We preserve generic receiver-name/reference fields without claiming a verified native tag mapping. We do not impose participant-specific transaction limits or infer recipient requirements from another country.
+
+**Native QR Ph payload encoding and decoding are not implemented:** researched public sources did not establish the Philippine account templates, routing identifiers and official conformance vectors. A PayTo URI is not a QR Ph payload accepted by banking apps. No generic EMV payload is classified as QR Ph merely from PH/PHP.
+
+Architecture, when a verified native profile becomes available:
+
+```text
+PayTo URI → structured payment data → native encoder → payload string
+scanned payload string → native decoder → structured data → PayTo URI
+```
+
+The native arrows above are currently unavailable for QR Ph. Libraries stop at data, never render QR images, scan cameras, enroll merchants, connect to InstaPay, transfer funds or check payment status. QR URI input is capped at 8192 characters; duplicate query keys, controls, malformed escaping and invalid amounts are rejected.
+
+Sources: [BSP QR Ph](https://www.bsp.gov.ph/SitePages/MediaAndResearch/Multimedia_QRPh.aspx), [BSP P2P FAQ](https://www.bsp.gov.ph/Media_and_Research/Primers%20Faqs/QR_Ph_P2P_FAQs.pdf), [BSP P2M FAQ](https://www.bsp.gov.ph/Media_and_Research/Primers%20Faqs/QR_Ph_P2M_FAQs.pdf), [PayMongo MPM API](https://docs.paymongo.com/reference/generate-mpm-qr), [PayMongo QR Ph acceptance](https://docs.paymongo.com/docs/payment-acceptance-qr-ph). Provider API fields are evidence for supported payment concepts, not the national TLV layout.
+
+### Indonesian QRIS payment data
+
+Canonical URI: `payto://qr/id/{identifier}`. Network `qr`, country `id`, scheme `qris`, domestic currency `IDR`.
+The path remains an opaque acquirer-issued identifier (`issuer` type). It is **not** relabeled NMID or Merchant PAN: the reviewed public material does not establish sufficient routing semantics for that mapping. Do not invent these provider-issued values.
+
+```text
+payto://qr/id/Demo?qr-type=static
+payto://qr/id/Demo?amount=IDR%3A50000&qr-type=dynamic&reference=Bill%201
+```
+
+These illustrative links are not native QRIS payloads. Optional `qr-type=static|dynamic` uses the existing `qrType` property. Explicit static requests reject amount; dynamic requests require it. Unspecified type preserves a portable suggested amount without generating a native transaction. Amounts are positive IDR decimal strings, at most two fractional digits, capped at IDR 10,000,000 using integer minor-unit comparison. Decimal precision is the existing portable profile, not a claim that every provider accepts fractional rupiah. Generic `receiver-name` and `reference` remain portable metadata without a verified QRIS tag mapping. No static-to-dynamic payload conversion is implemented.
+
+`inspectEmvMpm(payload)` provides bounded **raw ASCII EMV envelope inspection** in both libraries. It checks TLV boundaries, duplicate fields, nested template boundaries and CRC, then returns `fields` and `templates`. Its JSON shape matches across TypeScript and Dart (Dart uses `.toJson()`). It does not return a national scheme, NMID, Merchant PAN or PayTo target and is not a QRIS compliance validator. It rejects non-ASCII input and payloads over 4096 characters; nested unknown subfields stay raw. The official Midtrans example is a fixture with published CRC `A623`.
+
+**Native QRIS encoding and semantic decoding remain unsupported.** Full authoritative routing/template requirements were not available in the reviewed public material. ASPI documents a specification request process. Neither a correct CRC nor ID/360 proves QRIS validity. No guessed national tags, transaction identifiers or provider credentials are generated. The website uses PayTo for this country and hides the native-format switch.
+
+```text
+PayTo URI ↔ structured portable QR data
+provider payload → raw EMV inspection (no payment destination inference)
+structured QRIS → native encoder → payload → website renderer [not implemented]
+```
+
+Libraries render no images, perform no scanning or network calls, register no merchants, issue no identifiers and perform no transfers, status checks or settlement. Static QR does not authorize recurring debits. CPM, QRIS TAP, Tuntas, cross-border routing/FX and provider connectivity are outside this implementation.
+
+Sources: [Bank Indonesia QRIS](https://www.bi.go.id/id/fungsi-utama/sistem-pembayaran/ritel/kanal-layanan/QRIS/default.aspx), [ASPI QRIS modes](https://aspi-indonesia.or.id/standar-dan-layanan/qris/), [ASPI specification-request process, annual report p. 46](https://aspi-indonesia.or.id/files/2024/12/AR%20ASPI%202023-FA_all_rev.pdf), [Midtrans official dynamic example](https://docs.midtrans.com/docs/gopay-qris-pos-integration), [EMVCo QR specifications](https://www.emvco.com/emv-technologies/qr-codes/), [BI cross-border QRIS](https://www.bi.go.id/id/fungsi-utama/sistem-pembayaran/ritel/kanal-layanan/QRIS/QRIS-Antarnegara/default.aspx).
+
+
+### Presentation formats and URI extensions
+
+`Payto.formats` returns `['payto', 'epc']` for IBAN, or `['payto', '<scheme>']`
+for supported Pay QR countries: `khqr`, `laoqr`, `duitnow`, `mmqr`, `paynow`,
+`promptpay`, and `vietqr`. PayTo-only methods (including Brunei, QR Ph, and QRIS)
+omit `formats` from object JSON; the getter returns `undefined`.
+PayTo is always first and is the default. Capability metadata does not validate
+whether the supplied fields are sufficient for a native payment format.
+
+`reference`, `purpose`, and `information` are readable/writable PayTo query
+extensions, also exposed in object JSON. Assign `null` to remove them. Unknown
+query extensions remain preserved by the URI codec. `formats` is derived metadata,
+not a query parameter; reading it never changes the PayTo link.
+
+These libraries encode and decode **PayTo links only**. They do not generate or
+parse EPC or national payment payloads, or render barcodes. Applications implement
+those formats and validate their requirements separately.
+
+
+**Validation coverage is partial:** all current Pay QR fields round-trip through
+the parameter map, but dedicated field accessors/top-level JSON properties and
+country-specific validation are not complete. See [field coverage and known
+validation gaps](docs/PAYQR.md#field-coverage-and-validation-boundaries).

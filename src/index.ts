@@ -1,4 +1,20 @@
+import { parsePayQr, serializePayQr } from './payqr/index.js';
+export * from './payqr/index.js';
+
+/** Presentation capabilities only; this package encodes/decodes PayTo URIs. */
+export type PaymentFormat = 'payto' | 'epc' | 'khqr' | 'laoqr' | 'duitnow' | 'mmqr' | 'paynow' | 'promptpay' | 'vietqr';
+
 export type PaytoJSON = {
+	formats?: PaymentFormat[];
+	purpose?: string;
+	information?: string;
+	country?: string;
+	scheme?: string;
+	identifier?: string;
+	identifierType?: string;
+	reference?: string;
+	paymentMode?: string;
+	qrType?: string;
 	accountAlias?: string | null;
 	accountId?: string | null;
 	accountNumber?: number | string | null;
@@ -73,9 +89,66 @@ class Payto {
 	/** Creates a new Payto instance from a payto URL string */
 	constructor(paytoString: string) {
 		this.url = new URL(paytoString);
+		if (this.hostname === 'qr') this.url = new URL(serializePayQr(parsePayQr(paytoString)));
 		if (this.url.protocol !== 'payto:') {
 			throw new Error('Invalid protocol, must be payto:');
 		}
+	}
+
+	/** Available presentation formats, omitted when only PayTo is supported.
+	 * Capability metadata, not validation or native payload conversion.
+	 */
+	get formats(): PaymentFormat[] | undefined {
+		if (this.network === 'iban') return ['payto', 'epc'];
+		if (this.network !== 'qr') return undefined;
+		const target = this.payQr!;
+		if (!['kh', 'la', 'my', 'mm', 'sg', 'th', 'vn'].includes(target.country)) return undefined;
+		return ['payto', target.scheme as PaymentFormat];
+	}
+
+	/** Optional PayTo URI extensions; no EPC payload encoding is performed. */
+	get purpose(): string | null { return this.searchParams.get('purpose'); }
+	set purpose(value: string | null) { this.setUriExtension('purpose', value); }
+	get information(): string | null { return this.searchParams.get('information'); }
+	set information(value: string | null) { this.setUriExtension('information', value); }
+	private setUriExtension(key: string, value: string | null): void {
+		if (this.network === 'qr') { this.setPayQrParameter(key, value); return; }
+		if (value === null) this.searchParams.delete(key);
+		else this.searchParams.set(key, value);
+	}
+
+	/** Validated national/interoperable QR destination, or null for another network. */
+	get payQr() { return this.network === 'qr' ? parsePayQr(this.url.href) : null; }
+	get country(): string | null { return this.payQr?.country ?? null; }
+	set country(value: string) { this.updatePayQr({ country: value as import('./payqr/index.js').PayQrCountry }); }
+	get scheme(): string | null { return this.payQr?.scheme ?? null; }
+	get identifier(): string | null { return this.payQr?.identifier ?? null; }
+	set identifier(value: string) { this.updatePayQr({ identifier: value }); }
+	get identifierType(): string | null { return this.payQr?.identifierType ?? null; }
+	set identifierType(value: string) { this.updatePayQr({ identifierType: value }); }
+	/** QR Ph use case; distinct from the pass presentation mode. */
+	get paymentMode(): string | null { return this.payQr?.parameters["payment-mode"] ?? null; }
+	set paymentMode(value: string | null) { this.setPayQrParameter("payment-mode", value); }
+	get qrType(): string | null { return this.payQr?.parameters["qr-type"] ?? null; }
+	set qrType(value: string | null) { this.setPayQrParameter("qr-type", value); }
+	get reference(): string | null { return this.searchParams.get('reference'); }
+	set reference(value: string | null) {
+		if (this.network === 'qr') { this.setPayQrParameter('reference', value); return; }
+		if (value === null) this.searchParams.delete('reference');
+		else this.searchParams.set('reference', value);
+	}
+	private setPayQrParameter(key: string, value: string | null): void {
+		const target = this.payQr;
+		if (!target) throw new Error('Expected qr network');
+		const parameters = { ...target.parameters };
+		if (value === null || value === '') delete parameters[key];
+		else parameters[key] = value;
+		this.updatePayQr({ parameters });
+	}
+	private updatePayQr(update: Partial<import('./payqr/index.js').PayQrTarget>): void {
+		const target = this.payQr;
+		if (!target) throw new Error('Expected qr network');
+		this.url = new URL(serializePayQr({ ...target, ...update }));
 	}
 
 	/** Extracts parts from combined hostname and pathname */
@@ -212,11 +285,16 @@ class Payto {
 
 	/** Gets payment address */
 	get address(): string | null {
-		return this.getPathParts();
+		return this.network === 'qr' ? this.identifier : this.getPathParts();
 	}
 
 	/** Sets payment address */
 	set address(value: string | null) {
+		if (this.network === 'qr') {
+			if (value === null) throw new Error('PayQR identifier is required');
+			this.identifier = value;
+			return;
+		}
 		this.setPathParts(value);
 	}
 
@@ -227,6 +305,7 @@ class Payto {
 
 	/** Sets payment amount */
 	set amount(value: string | null) {
+		if (this.network === 'qr') { this.setPayQrParameter('amount', value); return; }
 		if (value) {
 			this.searchParams.set('amount', value);
 		} else {
@@ -501,7 +580,7 @@ class Payto {
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/href
 	 */
 	get href(): string {
-		return this.url.href;
+		return this.network === 'qr' ? serializePayQr(parsePayQr(this.url.href)) : this.url.href;
 	}
 
 	/**
@@ -509,7 +588,8 @@ class Payto {
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/href
 	 */
 	set href(value: string) {
-		this.url.href = value;
+		const candidate = new URL(value);
+		this.url = candidate.hostname.toLowerCase() === 'qr' ? new URL(serializePayQr(parsePayQr(value))) : candidate;
 	}
 
 	/** Gets IBAN from path */
@@ -615,6 +695,7 @@ class Payto {
 
 	/** Sets payment message */
 	set message(value: string | null) {
+		if (this.network === 'qr') { this.setPayQrParameter('message', value); return; }
 		if (value) {
 			this.searchParams.set('message', value);
 		} else {
@@ -639,6 +720,7 @@ class Payto {
 
 	/** Sets organization name (max 25 chars) */
 	set organization(value: string | null) {
+		if (this.network === 'qr') { this.setPayQrParameter('org', value); return; }
 		if (value !== null && value.length <= 25) {
 			this.searchParams.set('org', value);
 		} else {
@@ -728,6 +810,7 @@ class Payto {
 
 	/** Sets receiver name */
 	set receiverName(value: string | null) {
+		if (this.network === 'qr') { this.setPayQrParameter('receiver-name', value); return; }
 		if (value) {
 			this.searchParams.set('receiver-name', value);
 		} else {
@@ -995,17 +1078,27 @@ class Payto {
 
 	/** Converts to URL string */
 	toString(): string {
-		return this.url.toString();
+		return this.href;
 	}
 
 	/** Converts to JSON string */
 	toJSON(): string {
-		return this.url.toJSON();
+		return this.href;
 	}
 
 	/** Converts to PaytoJSON object with all properties */
 	toJSONObject(): PaytoJSON {
 		const obj: PaytoJSON = {};
+		if (this.formats) obj.formats = this.formats;
+		if (this.purpose) obj.purpose = this.purpose;
+		if (this.information) obj.information = this.information;
+		if (this.payQr) {
+			const { country, scheme, identifier, identifierType } = this.payQr;
+			Object.assign(obj, { country, scheme, identifier, identifierType });
+		}
+		if (this.paymentMode) obj.paymentMode = this.paymentMode;
+		if (this.qrType) obj.qrType = this.qrType;
+		if (this.reference) obj.reference = this.reference;
 
 		// URL properties
 		if (this.port) obj.port = this.port;
