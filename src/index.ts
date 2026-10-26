@@ -28,7 +28,6 @@ export type PaytoJSON = {
 	currency?: [string | null, string | null];
 	deadline?: number | null;
 	donate?: boolean | null;
-	fiat?: string | null;
 	hash?: string;
 	host?: string;
 	hostname?: string;
@@ -53,6 +52,7 @@ export type PaytoJSON = {
 	rtl?: boolean | null;
 	search?: string;
 	split?: [string, string, boolean] | null;
+	swap?: string | null;
 	username?: string;
 	value?: number | null;
 	void?: string | null;
@@ -415,11 +415,11 @@ class Payto {
 		}
 	}
 
-	/** Gets currency as [asset, fiat] tuple */
+	/** Gets currency as [amount currency, swap asset] tuple */
 	get currency(): [string | null, string | null] {
 		const result: [string | null, string | null] = [null, null];
 		const amountValue = this.searchParams.get('amount');
-		const fiatValue = this.fiat;
+		const swapValue = this.swap;
 
 		if (amountValue) {
 			const amountArray = amountValue.split(':');
@@ -428,19 +428,19 @@ class Payto {
 			}
 		}
 
-		if (fiatValue) {
-			result[1] = fiatValue;
+		if (swapValue) {
+			result[1] = swapValue;
 		}
 
 		return result;
 	}
 
-	/** Sets currency from [token, fiat, value] array */
+	/** Sets currency from [token, swap, value] array */
 	set currency(valueArray: Array<string | number | null | undefined>) {
 		if (valueArray.length > 3) {
 			throw new Error('Invalid currency array length');
 		}
-		const [token, fiat, value] = valueArray;
+		const [token, swap, value] = valueArray;
 		const amountValue = this.searchParams.get('amount');
 		let prevToken, prevValue;
 		if (amountValue) {
@@ -454,10 +454,10 @@ class Payto {
 		} else if (value === null) {
 			prevValue = null;
 		}
-		if (fiat && typeof fiat === 'string') {
-			this.fiat = fiat.toLowerCase();
-		} else if (fiat === null) {
-			this.fiat = null;
+		if (swap && typeof swap === 'string') {
+			this.swap = swap.toLowerCase();
+		} else if (swap === null) {
+			this.swap = null;
 		}
 		if (token) {
 			this.amount = `${token}:${value || (prevValue || '')}`;
@@ -513,19 +513,6 @@ class Payto {
 		}
 	}
 
-	/** Gets fiat currency code */
-	get fiat(): string | null {
-		return this.searchParams.get('fiat')?.toLowerCase() ?? null;
-	}
-
-	/** Sets fiat currency code */
-	set fiat(value: string | null) {
-		if (value) {
-			this.searchParams.set('fiat', value);
-		} else {
-			this.searchParams.delete('fiat');
-		}
-	}
 
 	/**
 	 * Gets URL hash
@@ -1126,7 +1113,6 @@ class Payto {
 		if (this.currency[0] || this.currency[1]) obj.currency = this.currency;
 		if (this.deadline) obj.deadline = this.deadline;
 		if (this.donate) obj.donate = this.donate;
-		if (this.fiat) obj.fiat = this.fiat;
 		if (this.hash) obj.hash = this.hash;
 		if (this.iban) obj.iban = this.iban;
 		if (this.item) obj.item = this.item;
@@ -1142,6 +1128,7 @@ class Payto {
 		if (this.routingNumber) obj.routingNumber = this.routingNumber;
 		if (this.rtl) obj.rtl = this.rtl;
 		if (this.split) obj.split = this.split;
+		if (this.swap) obj.swap = this.swap;
 		if (this.value !== null) obj.value = this.value;
 		if (this.void) obj.void = this.void;
 
