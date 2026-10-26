@@ -41,20 +41,20 @@ Here's an example of how to use the `payto-rl` package:
 import Payto from 'payto-rl';
 
 // Basic payment URL
-const paytoString = 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur';
+const paytoString = 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=eur:10.01&swap=ctn';
 const payto = new Payto(paytoString);
 
 // Standard payment properties
 console.log(payto.address);  // 'cb7147879011ea207df5b35a24ca6f0859dcfb145999'
-console.log(payto.amount);   // 'ctn:10.01'
+console.log(payto.amount);   // 'eur:10.01'
 console.log(payto.value);    // 10.01
 console.log(payto.network);  // 'xcb'
-console.log(payto.currency); // ['ctn', 'eur']
+console.log(payto.currency); // ['eur', 'ctn']
 
 // Update payment amount
 payto.value = 20.02;
-console.log(payto.amount);   // 'ctn:20.02'
-console.log(payto.fiat);     // 'eur'
+console.log(payto.amount);   // 'eur:20.02'
+console.log(payto.swap);     // 'ctn'
 
 // Color customization
 payto.colorBackground = 'ff0000';  // Red background (6-character hex)
@@ -148,7 +148,7 @@ Creates a new Payto instance from a payto URL string.
 ### Properties
 
 | Property | Type | Description |
-|----------|------|-------------|
+| -------- | ---- | ----------- |
 | `accountAlias` | `string \| null` | Email address for UPI/PIX payments (case-insensitive) |
 | `accountId` | `string \| null` | Account identifier for `bic` and `intra` payments |
 | `accountNumber` | `number \| string \| null` | Account number (7-14 digits for ACH, alphanumeric for INTRA) |
@@ -159,10 +159,9 @@ Creates a new Payto instance from a payto URL string.
 | `bic` | `string \| null` | Bank Identifier Code (8 or 11 characters, case-insensitive) |
 | `colorBackground` | `string \| null` | Background color in 6-character hex format |
 | `colorForeground` | `string \| null` | Foreground color in 6-character hex format |
-| `currency` | `[string \| null, string \| null]` | Currency codes array [asset, fiat] |
+| `currency` | `[string \| null, string \| null]` | Currency codes array [amount currency, swap asset] |
 | `deadline` | `number \| null` | Payment deadline (Unix timestamp or positive integer) |
 | `donate` | `boolean \| null` | Donation flag |
-| `fiat` | `string \| null` | Fiat currency code (case-insensitive) |
 | `hash` | `string` | URL hash component |
 | `host` | `string` | Complete host (hostname:port) |
 | `hostname` | `string` | Host without port (case-insensitive) |
@@ -195,7 +194,7 @@ Creates a new Payto instance from a payto URL string.
 ### Methods
 
 | Method | Return Type | Description |
-|--------|-------------|-------------|
+| ------ | ----------- | ----------- |
 | `toString()` | `string` | Returns the complete payto URL string |
 | `toJSON()` | `string` | Returns a JSON string representation |
 | `toJSONObject()` | `PaytoJSON` | Returns a typed object with all properties and custom fields |
@@ -351,7 +350,6 @@ Libraries render no images, perform no scanning or network calls, register no me
 
 Sources: [Bank Indonesia QRIS](https://www.bi.go.id/id/fungsi-utama/sistem-pembayaran/ritel/kanal-layanan/QRIS/default.aspx), [ASPI QRIS modes](https://aspi-indonesia.or.id/standar-dan-layanan/qris/), [ASPI specification-request process, annual report p. 46](https://aspi-indonesia.or.id/files/2024/12/AR%20ASPI%202023-FA_all_rev.pdf), [Midtrans official dynamic example](https://docs.midtrans.com/docs/gopay-qris-pos-integration), [EMVCo QR specifications](https://www.emvco.com/emv-technologies/qr-codes/), [BI cross-border QRIS](https://www.bi.go.id/id/fungsi-utama/sistem-pembayaran/ritel/kanal-layanan/QRIS/QRIS-Antarnegara/default.aspx).
 
-
 ### Presentation formats and URI extensions
 
 `Payto.formats` returns `['payto', 'epc']` for IBAN, or `['payto', '<scheme>']`
@@ -370,8 +368,11 @@ These libraries encode and decode **PayTo links only**. They do not generate or
 parse EPC or national payment payloads, or render barcodes. Applications implement
 those formats and validate their requirements separately.
 
-
 **Validation coverage is partial:** all current Pay QR fields round-trip through
 the parameter map, but dedicated field accessors/top-level JSON properties and
 country-specific validation are not complete. See [field coverage and known
 validation gaps](docs/PAYQR.md#field-coverage-and-validation-boundaries).
+
+The currency prefix in `amount` defines the payment currency, including USD or EUR.
+Use `swap` for the asset to transfer or process, for example `amount=usd:100&swap=ctn`.
+The `currency` tuple is `[amount currency, swap asset]`; the former `fiat` property is removed.

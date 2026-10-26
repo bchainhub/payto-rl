@@ -5,13 +5,13 @@ import Payto from '../dist/index.js';
 const test = suite('Payto');
 
 test('constructor with valid payto string', () => {
-	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur');
-	assert.is(payto.href, 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur');
+	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&swap=eur');
+	assert.is(payto.href, 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&swap=eur');
 });
 
 test('constructor with invalid protocol', () => {
 	assert.throws(() => {
-		new Payto('http://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur');
+		new Payto('http://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&swap=eur');
 	}, /Invalid protocol, must be payto:/);
 });
 
@@ -47,7 +47,7 @@ test('get and set contact destination', () => {
 });
 
 test('get and set currency', () => {
-	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur');
+	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&swap=eur');
 	assert.equal(payto.currency, ['ctn', 'eur']);
 	payto.currency = ['xxx', 'usd', 20.02];
 	assert.equal(payto.currency, ['xxx', 'usd']);
@@ -58,7 +58,7 @@ test('get and set currency', () => {
 });
 
 test('get and set value', () => {
-	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur');
+	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&swap=eur');
 	assert.is(payto.value, 10.01);
 	payto.value = 20.02;
 	assert.is(payto.value, 20.02);
@@ -85,7 +85,7 @@ test('get and set donate', () => {
 });
 
 test('get and set asset', () => {
-	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur');
+	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&swap=eur');
 	assert.is(payto.asset, 'ctn');
 	payto.asset = 'xxx';
 	assert.is(payto.asset, 'xxx');
@@ -95,15 +95,15 @@ test('get and set asset', () => {
 	assert.equal(payto.currency, ['xxx', 'eur']);
 });
 
-test('get and set fiat', () => {
-	const payto = new Payto('payto://btc/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?fiat=usd');
-	assert.is(payto.fiat, 'usd');
-	payto.fiat = 'eur';
-	assert.is(payto.fiat, 'eur');
+test('get and set swap currency', () => {
+	const payto = new Payto('payto://btc/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?swap=usd');
+	assert.is(payto.swap, 'usd');
+	payto.swap = 'eur';
+	assert.is(payto.swap, 'eur');
 });
 
 test('toJSONObject', () => {
-	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur&color-f=001BEE');
+	const payto = new Payto('payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&swap=eur&color-f=001BEE');
 	const jsonObject = payto.toJSONObject();
 	assert.equal(jsonObject, {
 		address: 'cb7147879011ea207df5b35a24ca6f0859dcfb145999',
@@ -114,14 +114,14 @@ test('toJSONObject', () => {
 			"ctn",
 			"eur"
 		],
-		fiat: 'eur',
+		swap: 'eur',
 		host: 'xcb',
 		hostname: 'xcb',
-		href: 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&fiat=eur&color-f=001BEE',
+		href: 'payto://xcb/cb7147879011ea207df5b35a24ca6f0859dcfb145999?amount=ctn:10.01&swap=eur&color-f=001BEE',
 		network: 'xcb',
 		pathname: '/cb7147879011ea207df5b35a24ca6f0859dcfb145999',
 		protocol: 'payto:',
-		search: '?amount=ctn:10.01&fiat=eur&color-f=001BEE',
+		search: '?amount=ctn:10.01&swap=eur&color-f=001BEE',
 		value: 10.01,
         origin: "payto://xcb"
 	});
@@ -556,15 +556,15 @@ test('mode in toJSONObject', () => {
 });
 
 test('mode with other parameters', () => {
-	const payto = new Payto('payto://xcb/address?amount=10&mode=nfc&fiat=eur');
+	const payto = new Payto('payto://xcb/address?amount=10&mode=nfc&swap=eur');
 	assert.is(payto.mode, 'nfc');
 	assert.is(payto.amount, '10');
-	assert.is(payto.fiat, 'eur');
+	assert.is(payto.swap, 'eur');
 
 	payto.mode = 'qr';
 	assert.is(payto.mode, 'qr');
 	assert.is(payto.amount, '10');
-	assert.is(payto.fiat, 'eur');
+	assert.is(payto.swap, 'eur');
 });
 
 test('handle path parts operations', () => {
@@ -805,15 +805,15 @@ test('lang in toJSONObject', () => {
 });
 
 test('lang with other parameters', () => {
-	const payto = new Payto('payto://xcb/address?amount=10&lang=fr&fiat=eur');
+	const payto = new Payto('payto://xcb/address?amount=10&lang=fr&swap=eur');
 	assert.is(payto.lang, 'fr');
 	assert.is(payto.amount, '10');
-	assert.is(payto.fiat, 'eur');
+	assert.is(payto.swap, 'eur');
 
 	payto.lang = 'es';
 	assert.is(payto.lang, 'es');
 	assert.is(payto.amount, '10');
-	assert.is(payto.fiat, 'eur');
+	assert.is(payto.swap, 'eur');
 });
 
 test('INTRA transfer - get BIC and account number', () => {
@@ -930,6 +930,17 @@ test('INTRA transfer - complete example', () => {
 
 	// Verify the URL string
 	assert.ok(payto.toString().includes('payto://intra/pingchb2/cb1958b39698a44bdae37f881e68dce073823a48a631'));
+});
+
+test('amount currency and swap replace the legacy fiat hint', () => {
+	const payto = new Payto('payto://xcb/address?amount=usd:100&swap=ctn&fiat=eur');
+	assert.equal(payto.currency, ['usd', 'ctn']);
+	assert.is(payto.value, 100);
+	assert.is(payto.toJSONObject().swap, 'ctn');
+	assert.not.ok('fiat' in payto.toJSONObject());
+	payto.currency = ['eur', 'xau', 25];
+	assert.is(payto.amount, 'eur:25');
+	assert.is(payto.swap, 'xau');
 });
 
 test.run();
